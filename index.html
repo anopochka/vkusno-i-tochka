@@ -617,6 +617,10 @@ body.mob .sheet{padding-bottom:calc(20px + env(safe-area-inset-bottom,0px))}
 .mod .tg .sw{width:46px;height:28px}
 .mod .tg .sw::after{width:22px;height:22px}
 .mod .tg .sw.on::after{transform:translateX(18px)}
+.rcline{display:flex;align-items:center;gap:8px;padding:3px 0}
+.rcline i{width:9px;height:9px;border-radius:50%;background:#C9C9C9;flex:none}
+.rcline i.ok{background:#1F7A4A}.rcline i.bad{background:#C2412D}
+.rcin{width:100%;border:1px solid var(--line);border-radius:10px;padding:9px 10px;font:inherit;font-size:12px;background:var(--card-2);color:var(--ink)}
 .log{background:var(--card-2);border-radius:12px;padding:10px 12px;font-size:12px;line-height:1.55;max-height:180px;overflow-y:auto;font-variant-numeric:tabular-nums;white-space:pre-wrap;color:var(--ink-2)}
 .mrow{display:flex;gap:8px;margin-top:8px}
 .mrow button{flex:1;background:var(--card-2);border-radius:12px;height:38px;font-size:13px;font-weight:600}
@@ -781,6 +785,15 @@ body.mob .sheet{padding-bottom:calc(20px + env(safe-area-inset-bottom,0px))}
 <aside class="mod" id="mod" aria-label="Панель модератора">
   <h4>Модератор <button id="modClose" aria-label="Закрыть панель"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#1C1C1C" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button></h4>
   <div style="color:var(--grey)">Сначала участник действует сам, вопросы задаются после.</div>
+  <div id="rcBox" hidden>
+    <div class="cap">Удалённое управление</div>
+    <div class="rcline"><i id="rcDot"></i><span id="rcSt">Подключаюсь…</span></div>
+    <div class="rcline"><i id="rcDot2"></i><span id="rcResp">Респондент ещё не открыл ссылку</span></div>
+    <div style="color:var(--grey);font-size:12px;margin:10px 0 6px">Ссылка для респондента</div>
+    <input id="rcLink" class="rcin" readonly>
+    <div class="mrow"><button id="rcCopy">Скопировать ссылку</button><button id="rcNew">Новый респондент</button></div>
+    <div style="color:var(--grey);font-size:12px;margin-top:8px">Кнопки ниже меняют экран у респондента на телефоне. «Новый респондент» создаёт новую ссылку — старая перестанет управляться.</div>
+  </div>
   <div class="cap">Задания</div>
   <button class="tk go" data-task="1"><b>1 · Заказать по пути</b><span>Сброс: меню, пустая корзина, реальное время</span></button>
   <button class="tk" data-task="2"><b>2 · Получить заказ</b><span>Экран блокировки с пушем «Заказ готов»</span></button>
@@ -905,10 +918,16 @@ const ICON={
   bell:'<svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#EE7203" stroke-width="1.8" stroke-linejoin="round"><path d="M6 10a6 6 0 0 1 12 0v4l2 3H4l2-3v-4Z"/><path d="M10 20a2 2 0 0 0 4 0" stroke-linecap="round"/></svg>'
 };
 function log(ev){
+  if(RC_ROLE==='mod') return; // in moderator mode the log shows the respondent's actions
   const el=Math.round((Date.now()-S.t0)/1000);
-  S.log.push(`${String(Math.floor(el/60)).padStart(2,'0')}:${String(el%60).padStart(2,'0')}  ${ev}`);
+  const line=`${String(Math.floor(el/60)).padStart(2,'0')}:${String(el%60).padStart(2,'0')}  ${ev}`;
+  S.log.push(line);
   const L=$('#log'); L.textContent=S.log.join('\n'); L.scrollTop=1e6;
+  if(RC_ROLE==='resp') RC_Q.push(line);
 }
+var RC_Q=[];
+const RC_P=new URLSearchParams(location.search);
+var RC_ROLE=RC_P.has('mod')?'mod':(RC_P.get('room')?'resp':null);
 let toastT;
 function toast(t){const e=$('#toast');e.textContent=t;e.classList.add('on');clearTimeout(toastT);toastT=setTimeout(()=>e.classList.remove('on'),2200)}
 
@@ -1536,7 +1555,7 @@ $('#repeatBtn').onclick=()=>{
 const mod=$('#mod');
 function toggleMod(){mod.classList.toggle('on')}
 $('#modClose').onclick=toggleMod;
-mod.addEventListener('click',e=>{const b=e.target.closest('[data-task]');if(b)task(b.dataset.task);const st=e.target.closest('[data-st]');if(st)jumpState(st.dataset.st);const nt=e.target.closest('[data-nt]');if(nt)notifCtl(nt.dataset.nt)});
+mod.addEventListener('click',e=>{const b=e.target.closest('[data-task]');if(b){task(b.dataset.task);rcCmd({c:'task',k:b.dataset.task})}const st=e.target.closest('[data-st]');if(st){jumpState(st.dataset.st);rcCmd({c:'st',k:st.dataset.st})}const nt=e.target.closest('[data-nt]');if(nt){notifCtl(nt.dataset.nt);rcCmd({c:'nt',k:nt.dataset.nt})}});
 function notifCtl(a){
   if(a==='on'){S.notif='on';log('Модератор: уведомления включены');if(S.stack.at(-1)==='order')renderOrder();nPaint();return}
   mod.classList.remove('on');
@@ -1566,6 +1585,75 @@ $('#clearLog').onclick=()=>{S.log=[];S.t0=Date.now();$('#log').textContent='По
 document.addEventListener('keydown',e=>{if(e.target.tagName==='INPUT')return;if(e.key==='m'||e.key==='M'||e.key==='ь'||e.key==='Ь')toggleMod();if(e.key==='Escape'){mod.classList.remove('on');closeSheet()}});
 let taps=[];
 $('#hot').addEventListener('pointerdown',()=>{const t=Date.now();taps=taps.filter(x=>t-x<900);taps.push(t);if(taps.length>=3){taps=[];toggleMod()}});
+
+/* ---------- remote control (moderator ⇄ respondent via ntfy.sh) ---------- */
+var RC_APPLY=false;
+const RC_CID=Math.random().toString(36).slice(2,10);
+const RC_HOST='https://ntfy.sh/';
+let RC_ROOM=RC_P.get('room');
+function rcNewRoom(){let s='';const a='abcdefghijkmnpqrstuvwxyz23456789';for(let i=0;i<12;i++)s+=a[Math.floor(Math.random()*a.length)];return 'vit-'+s}
+function rcSend(m){if(!RC_ROOM)return;m.f=RC_CID;fetch(RC_HOST+RC_ROOM,{method:'POST',body:JSON.stringify(m)}).catch(()=>{})}
+function rcCmd(m){if(RC_ROLE!=='mod'||RC_APPLY)return;rcSend(m);setTimeout(()=>mod.classList.add('on'),30)}
+let RC_ES=null;
+function rcConnect(onMsg,onState){
+  if(RC_ES)RC_ES.close();
+  const es=new EventSource(RC_HOST+RC_ROOM+'/sse'); RC_ES=es;
+  es.onopen=()=>onState(true);
+  es.onerror=()=>onState(false);
+  es.onmessage=e=>{try{const d=JSON.parse(e.data);if(d.event!=='message')return;const m=JSON.parse(d.message);if(m.f===RC_CID)return;onMsg(m)}catch(_){}}
+}
+function rcApply(m){
+  RC_APPLY=true;
+  try{
+    if(m.c==='task') task(m.k);
+    if(m.c==='st') jumpState(m.k);
+    if(m.c==='nt') notifCtl(m.k);
+    if(m.c==='set'){const el=$('#'+m.id);if(el&&el.classList.contains('on')!==!!m.v)el.click()}
+  }finally{RC_APPLY=false}
+}
+['etaSw','delaySw','notifSw'].forEach(id=>{const el=$('#'+id);el.addEventListener('click',()=>rcCmd({c:'set',id,v:el.classList.contains('on')}))});
+if(RC_ROLE==='resp'){
+  let last=0;
+  const scrName=()=>NAMES[S.stack[S.stack.length-1]]||'';
+  rcConnect(m=>{ if(m.c==='ping'){rcSend({c:'hb',scr:scrName()});last=Date.now();return} if(m.c&&m.c!=='log'&&m.c!=='hb') rcApply(m) },
+    ok=>{ if(ok){rcSend({c:'hi',scr:scrName()});last=Date.now()} });
+  setInterval(()=>{
+    if(RC_Q.length){const lines=RC_Q.splice(0,RC_Q.length);rcSend({c:'log',lines,scr:scrName()});last=Date.now()}
+    else if(Date.now()-last>20000){rcSend({c:'hb',scr:scrName()});last=Date.now()}
+  },4000);
+}
+if(RC_ROLE==='mod'){
+  if(!RC_ROOM){try{RC_ROOM=localStorage.getItem('rcRoom')}catch(_){}}
+  if(!RC_ROOM) RC_ROOM=rcNewRoom();
+  const setRoom=r=>{RC_ROOM=r;try{localStorage.setItem('rcRoom',r)}catch(_){}
+    history.replaceState(null,'',location.pathname+'?mod&room='+r);
+    $('#rcLink').value=location.origin+location.pathname+'?room='+r;
+    $('#rcResp').textContent='Респондент ещё не открыл ссылку';$('#rcDot2').className='';seen=0;
+    S.log=[];$('#log').textContent='Пока пусто';
+    rcConnect(onMsg,ok=>{$('#rcSt').textContent=ok?'Связь есть':'Нет связи — переподключаюсь…';$('#rcDot').className=ok?'ok':'bad';if(ok)rcSend({c:'ping'})});
+  };
+  let seen=0, scr='';
+  const onMsg=m=>{
+    if(!['hi','hb','log'].includes(m.c))return;
+    seen=Date.now(); if(m.scr) scr=m.scr;
+    if(m.c==='hi'){S.log.push('—— респондент открыл ссылку ——')}
+    if(m.c==='log'&&m.lines){S.log.push(...m.lines)}
+    if(m.c!=='hb'){const L=$('#log');L.textContent=S.log.join('\n')||'Пока пусто';L.scrollTop=1e6}
+    paintResp();
+  };
+  const paintResp=()=>{if(!seen)return;const s=Math.round((Date.now()-seen)/1000);const on=s<45;
+    $('#rcDot2').className=on?'ok':'bad';
+    $('#rcResp').textContent=on?`Респондент на связи${scr?' · экран: '+scr:''}`:`Респондент пропал ${s} с назад${scr?' · был на экране: '+scr:''}`};
+  setInterval(paintResp,3000);
+  $('#rcBox').hidden=false;
+  $('#rcCopy').onclick=()=>{const v=$('#rcLink').value;navigator.clipboard.writeText(v).then(()=>toast('Ссылка скопирована'),()=>{$('#rcLink').select()})};
+  $('#rcLink').onclick=e=>e.target.select();
+  $('#rcNew').onclick=()=>{setRoom(rcNewRoom());toast('Новая ссылка готова')};
+  $('#copyLog').onclick=()=>{navigator.clipboard.writeText(S.log.join('\n')).then(()=>toast('Журнал скопирован'))};
+  $('#hint').innerHTML='<b>Режим модератора</b>Отправьте респонденту ссылку из панели справа. Кнопки панели меняют экран у него на телефоне, а в журнале видно, что он нажимает.';
+  setRoom(RC_ROOM);
+  setTimeout(()=>mod.classList.add('on'),400);
+}
 
 /* layout */
 function fit(){
