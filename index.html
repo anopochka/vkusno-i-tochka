@@ -583,6 +583,57 @@ body.mob .sheet{padding-bottom:calc(20px + env(safe-area-inset-bottom,0px))}
 .sheet h3{font-size:22px;margin:0 0 6px;text-align:center;text-wrap:balance}
 .sheet p{font-size:15px;color:var(--grey);text-align:center;margin:0 0 18px;line-height:1.45}
 .ghost{width:100%;height:50px;font-size:16px;color:var(--grey);margin-top:6px}
+/* экран «Время вышло» */
+.exp .tw-move{transform-box:view-box;animation:twMove 9s linear infinite}
+.exp .tw-hop{transform-box:view-box;animation:twHop 2s cubic-bezier(.3,0,.7,1) infinite}
+.exp .tw-spin{transform-box:fill-box;transform-origin:50% 50%;animation:twSpin 2s linear infinite}
+.exp .tw-shadow{transform-box:fill-box;transform-origin:50% 50%;animation:twSh 2s cubic-bezier(.3,0,.7,1) infinite}
+@keyframes twMove{0%{transform:translateX(0);opacity:0}8%{opacity:1}86%{opacity:1}100%{transform:translateX(-290px);opacity:0}}
+@keyframes twHop{0%,100%{transform:translateY(0)}12%{transform:translateY(1px)}45%{transform:translateY(-5px)}80%{transform:translateY(0)}}
+@keyframes twSh{0%,100%{transform:scaleX(1);opacity:.14}45%{transform:scaleX(.55);opacity:.05}80%{transform:scaleX(1);opacity:.14}}
+@keyframes twSpin{to{transform:rotate(-360deg)}}
+.exp .dust circle{transform-box:fill-box;transform-origin:50% 50%;animation:dust 2s ease-out infinite;opacity:0}
+.exp .dust circle:nth-child(2){animation-delay:.12s}.exp .dust circle:nth-child(3){animation-delay:.24s}
+@keyframes dust{0%,70%{opacity:0;transform:translate(0,0) scale(.4)}78%{opacity:.8}100%{opacity:0;transform:translate(14px,-6px) scale(1.4)}}
+.exp .wind path{stroke-dasharray:40 200;animation:wind 3.5s linear infinite}
+.exp .wind path:nth-child(2){animation-delay:-1.4s}.exp .wind path:nth-child(3){animation-delay:-2.6s}
+@keyframes wind{from{stroke-dashoffset:40;opacity:0}20%{opacity:.9}to{stroke-dashoffset:-200;opacity:0}}
+.exp .web{transform-box:view-box;animation:webSway 5s ease-in-out infinite}
+.exp .web.w1{transform-origin:0 0}.exp .web.w2{transform-origin:346px 0;animation-delay:-2s}
+@keyframes webSway{0%,100%{transform:rotate(0)}50%{transform:rotate(1deg)}}
+.exp .spider{transform-box:view-box;transform-origin:150px 0;animation:spider 5s ease-in-out infinite}
+@keyframes spider{0%,100%{transform:translateY(0) rotate(0)}25%{transform:translateY(10px) rotate(2deg)}50%{transform:translateY(4px) rotate(-2deg)}75%{transform:translateY(12px) rotate(1deg)}}
+.exp .spider .legs{transform-box:fill-box;transform-origin:50% 50%;animation:legs .5s ease-in-out infinite alternate}
+@keyframes legs{to{transform:scaleY(.85)}}
+.exp #bubbleG{transform-box:fill-box;transform-origin:0% 100%;animation:sad 4.5s ease-in-out infinite}
+@keyframes sad{0%,100%{transform:rotate(0)}50%{transform:rotate(-2deg)}}
+.exp .zz{transform-box:fill-box;transform-origin:50% 50%;animation:zz 3s ease-in-out infinite;opacity:0}
+.exp .zz:nth-of-type(2){animation-delay:1s}
+@keyframes zz{0%{opacity:0;transform:translate(0,4px)}30%{opacity:1}100%{opacity:0;transform:translate(6px,-10px)}}
+
+
+.rd.gone .num{color:#C4C4C4}.rd.gone .till{color:var(--grey)}
+.rd .left b.zero{color:var(--red)}.bar i.late{background:var(--red)}
+.acts{display:flex;flex-direction:column;gap:8px}
+.acts .ghost{height:44px;border-radius:22px;background:var(--line);color:var(--ink);margin:0}
+/* почта: ошибка */
+.field.err{box-shadow:inset 0 0 0 1.5px var(--red)}
+.note.err{color:var(--red)}
+.field.shake{animation:shake .4s}
+@keyframes shake{20%,60%{transform:translateX(-6px)}40%,80%{transform:translateX(6px)}}
+/* чек */
+.paybar .s{cursor:pointer}
+.rcpt h3{margin:4px 0 14px;font-size:20px;font-weight:700}
+.rcpt ul{list-style:none;margin:0;padding:0}
+.rcpt li{display:flex;justify-content:space-between;gap:12px;font-size:15px;padding:7px 0}
+.rcpt li span:first-child{color:var(--ink-2)}
+.rcpt li small{display:block;color:var(--grey-2);font-size:12px;margin-top:2px}
+.rcpt li b{font-weight:500;white-space:nowrap}
+.rcpt hr{border:0;border-top:1px solid var(--line);margin:8px 0}
+.rcpt .g{color:var(--ok)}
+.rcpt .tot{font-size:18px;font-weight:700;padding-top:10px}
+.rcpt .tot span:first-child{color:var(--ink)}
+.rcpt .cta{margin-top:16px}
 .psheet .big{height:220px;display:grid;place-items:center;background:var(--card);border-radius:22px;margin-bottom:16px}
 .psheet .big img{max-height:200px;mix-blend-mode:multiply}
 .psheet h3{text-align:left;font-size:20px}
@@ -805,7 +856,7 @@ body.mob .sheet{padding-bottom:calc(20px + env(safe-area-inset-bottom,0px))}
   <button class="tk" data-task="2"><b>2 · Получить заказ</b><span>Экран блокировки с пушем «Заказ готов»</span></button>
   <button class="tk" data-task="3a"><b>3 · Задержка</b><span>Поп-ап «Заказ задерживается», без нового времени</span></button>
   <div class="cap">Быстро переключить статус заказа</div>
-  <div class="stg"><button data-st="confirm">Подтверждаем</button><button data-st="accepted">Принят</button><button data-st="cooking">Готовится</button><button data-st="delayA">Задержка</button><button data-st="ready">Готов</button><button data-st="left5">Осталось 5 мин</button><button data-st="plus5">+5 минут</button></div>
+  <div class="stg"><button data-st="confirm">Подтверждаем</button><button data-st="accepted">Принят</button><button data-st="cooking">Готовится</button><button data-st="delay5">Задержка +5 мин</button><button data-st="delay15">Задержка +15 мин</button><button data-st="ready">Готов</button><button data-st="left5">Осталось 5 мин</button><button data-st="left2">Осталось 2 мин</button><button data-st="expired">Время вышло</button><button data-st="plus5">+5 минут</button></div>
   <div style="color:var(--grey);font-size:12px;margin-top:6px">При смене статуса пуш приходит сам — если участник включил уведомления.</div>
   <div class="cap">Уведомления <span id="nState" style="text-transform:none;letter-spacing:0;font-weight:600;color:var(--ink)"></span></div>
   <div class="stg"><button data-nt="on">Включить</button><button data-nt="lock">Блокировка</button><button data-nt="again">Повторить пуш</button></div>
@@ -821,6 +872,48 @@ body.mob .sheet{padding-bottom:calc(20px + env(safe-area-inset-bottom,0px))}
 <script>
 (()=>{
 const ILL={
+expired:`<svg viewBox="0 0 346 188" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Пустой серый прилавок, по нему катится перекати-поле">
+ <g transform="scale(1.3)"><g class="web w1" stroke="#C4C4C4" stroke-width=".9" stroke-linecap="round">
+  <path d="M0 0L56 0M0 0L0 56M0 0L48 26M0 0L26 48M0 0L40 40"/>
+  <path d="M14 0Q12 6 12 7Q8 9 7 12Q4 12 0 14"/>
+  <path d="M28 0Q24 10 24 13Q18 18 13 24Q8 23 0 28"/>
+  <path d="M42 0Q36 13 36 20Q28 27 20 36Q12 35 0 42"/>
+ </g>
+ </g>
+ <g transform="translate(346 0) scale(1.3) translate(-346 0)"><g class="web w2" stroke="#C8C8C8" stroke-width=".9" stroke-linecap="round">
+  <path d="M346 0L302 0M346 0L346 46M346 0L308 22M346 0L324 38"/>
+  <path d="M334 0Q336 5 335 7Q339 8 340 10Q343 10 346 12"/>
+  <path d="M320 0Q323 9 322 13Q328 16 332 21Q338 22 346 26"/>
+  <path d="M306 0Q311 13 310 19Q318 24 324 32Q334 33 346 40"/>
+  <path d="M330 40V54" stroke="#DDDDDD"/><circle cx="330" cy="55.5" r="1.6" fill="#BDBDBD" stroke="none"/>
+ </g></g>
+ <g transform="translate(0 -26)"><g id="bubbleG">
+  <path d="M206 92L242 82.5V99.5L206 92Z" fill="#CFCFCF"/>
+  <circle cx="254" cy="90" r="30" fill="#CFCFCF"/>
+  <text x="254" y="82.5" text-anchor="middle" fill="#fff" font-family="Onest,Arial" font-weight="700" font-size="7.8">Заказ</text>
+  <text x="254" y="100" text-anchor="middle" fill="#fff" font-family="Onest,Arial" font-weight="800" font-size="19">M13</text>
+ </g></g>
+ <g id="counter">
+  <rect x="28" y="153.35" width="290" height="9.35" rx="2.8" fill="#BDBDBD"/>
+  <rect x="38" y="162.7" width="270" height="20.57" rx="2.8" fill="#A3A3A3"/>
+ </g>
+ <g stroke="#C4C4C4" stroke-width=".9" stroke-linecap="round">
+  <path d="M38 162.7L38 178M38 162.7L52 162.7M38 162.7L50 174M38 168Q42 168 44 162.7M38 173Q46 172 48 162.7"/>
+  <path d="M308 162.7L308 176M308 162.7L296 162.7M308 162.7L298 172M308 168Q304 168 302 162.7"/>
+ </g>
+ <g class="tw-move">
+  <ellipse class="tw-shadow" cx="314" cy="153" rx="17" ry="2.6" fill="#000"/>
+  <g class="dust" fill="#DCDCDC"><circle cx="330" cy="150" r="2.4"/><circle cx="336" cy="147" r="1.8"/></g>
+  <g class="tw-hop"><g transform="translate(314 135)"><g class="tw-spin"><g transform="scale(1.15) translate(-314 -137)">
+   <g stroke="#B9976A" stroke-width="1.6" stroke-linecap="round" fill="none">
+    <path d="M300 131Q310 120 324 128Q332 138 322 148Q310 154 302 145Q296 138 303 132"/>
+    <path d="M306 125Q320 122 327 134Q328 146 316 151Q303 150 300 139"/>
+    <path d="M299 137Q302 125 314 122Q326 124 329 136"/>
+    <path d="M304 149Q314 141 326 144M302 128Q312 134 318 150"/>
+   </g>
+  </g></g></g></g>
+ </g>
+</svg>`,
 paid:`<svg viewBox="0 0 277 150" fill="none" xmlns="http://www.w3.org/2000/svg"><g id="counter"><rect x="71.07" y="122.68" width="134.65" height="7.48" rx="2.24" fill="#EE7203"/><rect x="78.55" y="130.16" width="119.69" height="16.45" rx="2.24" fill="#2F5A40"/></g><g id="bag"><g id="paper"><rect x="125.68" y="25.43" width="25.43" height="34.41" rx="1.49" fill="white" stroke="#E2E2E2" stroke-width="0.74"/><path d="M130.17 32.91H146.62M130.17 38.89H146.62M130.17 44.88H140.64" stroke="#EE7203" stroke-width="2.24" stroke-linecap="round"/></g><rect x="112.21" y="58.34" width="52.36" height="64.33" rx="2.99" fill="#C99A68"/><rect x="112.21" y="115.20" width="52.36" height="7.48" rx="1.49" fill="#A9794A"/><path d="M112.21 58.34H164.58L160.09 65.82H116.70L112.21 58.34Z" fill="#8C6238"/><path d="M133.16 97.25C136.65 100.74 140.14 100.74 143.63 97.25" stroke="#3A2412" stroke-width="2.24" stroke-linecap="round"/><circle opacity="0.55" cx="121.19" cy="95.75" r="3.74" fill="#F09A7E"/><circle opacity="0.55" cx="155.60" cy="95.75" r="3.74" fill="#F09A7E"/><g id="eyes"><circle cx="128.67" cy="88.27" r="2.99" fill="#3A2412"/><circle cx="148.12" cy="88.27" r="2.99" fill="#3A2412"/></g></g><g class="spark"><path d="M88.27 47.12C88.27 50.61 90.02 52.36 93.51 52.36C90.02 52.36 88.27 54.11 88.27 57.60C88.27 54.11 86.53 52.36 83.04 52.36C86.53 52.36 88.27 50.61 88.27 47.12Z" fill="#F5B400"/></g><g class="spark"><path d="M201.98 84.53C201.98 87.02 203.23 88.27 205.72 88.27C203.23 88.27 201.98 89.51 201.98 92.01C201.98 89.51 200.74 88.27 198.24 88.27C200.74 88.27 201.98 87.02 201.98 84.53Z" fill="#EE7203"/></g><g id="bubble"><g transform="translate(205.60 50.56) scale(1.1) translate(-169.60 -52.56)"><path d="M169.60 52.56L198.49 44.85V58.34L169.60 52.56Z" fill="#EE7203"/><circle cx="208.12" cy="51.6" r="26" fill="#EE7203"/><text x="208.2" y="45.3" text-anchor="middle" fill="#fff" font-family="Onest,Arial" font-weight="700" font-size="6.74">Заказ</text><text x="208.5" y="60.7" text-anchor="middle" fill="#fff" font-family="Onest,Arial" font-weight="800" font-size="16.37">M13</text></g></g></svg>`,
 cook:`<svg viewBox="0 0 277 150" fill="none" xmlns="http://www.w3.org/2000/svg"><g id="counter"><rect x="71.07" y="122.68" width="134.65" height="7.48" rx="2.24" fill="#EE7203"/><rect x="78.55" y="130.16" width="119.69" height="16.45" rx="2.24" fill="#2F5A40"/></g><g id="bag"><g id="food"><g class="it it-burger"><path d="M125.68 52.36C125.68 50.18 127.02 48.09 129.40 46.54C131.79 45.00 135.02 44.13 138.40 44.13C141.77 44.13 145.00 45.00 147.39 46.54C149.77 48.09 151.11 50.18 151.11 52.36H125.68Z" fill="#E7A445"/><rect x="124.93" y="52.36" width="26.93" height="3.74" rx="1.49" fill="#6A3B1F"/><rect x="124.18" y="55.35" width="28.42" height="2.24" rx="1.12" fill="#6BBF59"/><rect x="125.68" y="57.60" width="25.43" height="4.48" rx="2.24" fill="#E7A445"/></g><g class="it it-fries"><path d="M131.66 53.85L129.42 40.39M136.15 53.85V38.89M140.64 53.85L142.88 40.39M145.13 53.85L146.62 43.38" stroke="#F5B400" stroke-width="3.74" stroke-linecap="round"/><path d="M127.92 52.36H148.87L145.87 64.33H130.91L127.92 52.36Z" fill="#D9272E"/></g><g class="it it-cola"><path d="M130.17 43.38H146.62L144.38 62.83H132.41L130.17 43.38Z" fill="white" stroke="#E2E2E2" stroke-width="0.74"/><rect x="128.67" y="40.39" width="19.44" height="3.74" rx="1.49" fill="#D9272E"/><path d="M140.64 40.39L144.38 31.41" stroke="#D9272E" stroke-width="2.24" stroke-linecap="round"/></g></g><rect x="112.21" y="58.34" width="52.36" height="64.33" rx="2.99" fill="#C99A68"/><rect x="112.21" y="115.20" width="52.36" height="7.48" rx="1.49" fill="#A9794A"/><path d="M112.21 58.34H164.58L160.09 65.82H116.70L112.21 58.34Z" fill="#8C6238"/><ellipse id="mouth" cx="138.39" cy="99.49" rx="2.99" ry="3.74" fill="#3A2412"/><circle opacity="0.55" cx="121.19" cy="95.75" r="3.74" fill="#F09A7E"/><circle opacity="0.55" cx="155.60" cy="95.75" r="3.74" fill="#F09A7E"/><g id="eyes"><circle cx="128.67" cy="88.27" r="3.74" fill="white"/><circle cx="148.12" cy="88.27" r="3.74" fill="white"/><g id="pupils"><circle cx="128.67" cy="86.77" r="1.94" fill="#3A2412"/><circle cx="148.12" cy="86.77" r="1.94" fill="#3A2412"/></g></g></g><g class="steam"><path d="M95.76 89.76C93.51 86.02 98.00 84.52 95.76 80.78C93.51 77.04 98.00 75.55 95.76 71.81" stroke="#F3C4A2" stroke-width="1.87" stroke-linecap="round"/></g><g class="steam"><path d="M182.53 86.77C180.29 83.03 184.77 81.53 182.53 77.79C180.29 74.05 184.77 72.56 182.53 68.82" stroke="#F3C4A2" stroke-width="1.87" stroke-linecap="round"/></g><g class="spark"><path d="M86.78 40.39C86.78 43.38 88.28 44.88 91.27 44.88C88.28 44.88 86.78 46.37 86.78 49.37C86.78 46.37 85.28 44.88 82.29 44.88C85.28 44.88 86.78 43.38 86.78 40.39Z" fill="#F5B400"/></g><g class="spark"><path d="M194.94 4.80C194.94 7.29 196.18 8.54 198.68 8.54C196.18 8.54 194.94 9.78 194.94 12.28C194.94 9.78 193.69 8.54 191.19 8.54C193.69 8.54 194.94 7.29 194.94 4.80Z" fill="#EE7203"/></g><g id="bubble"><g transform="translate(207.60 42.76) scale(1.1) translate(-177.60 -43.76)"><path d="M177.60 43.76L206.49 36.05V49.54L177.60 43.76Z" fill="#EE7203"/><circle cx="216.12" cy="42.8" r="26" fill="#EE7203"/><text x="216.2" y="36.5" text-anchor="middle" fill="#fff" font-family="Onest,Arial" font-weight="700" font-size="6.74">Заказ</text><text x="216.5" y="51.9" text-anchor="middle" fill="#fff" font-family="Onest,Arial" font-weight="800" font-size="16.37">M13</text></g></g></svg>`,
 ready:`<svg viewBox="0 0 346 188" fill="none" xmlns="http://www.w3.org/2000/svg"><g class="conf"><rect x="65.46" width="6.54" height="10.28" rx="1.87" fill="#EE7203"/></g><g class="conf"><rect x="102.86" width="6.54" height="10.28" rx="1.87" fill="#F5B400"/></g><g class="conf"><rect x="233.78" width="6.54" height="10.28" rx="1.87" fill="#1F7A4A"/></g><g class="conf"><rect x="271.18" width="6.54" height="10.28" rx="1.87" fill="#EE7203"/></g><g class="conf"><rect x="299.23" width="6.54" height="10.28" rx="1.87" fill="#F5B400"/></g><g class="conf"><rect x="37.41" width="6.54" height="10.28" rx="1.87" fill="#1F7A4A"/></g><g class="conf"><rect x="130.92" width="6.54" height="10.28" rx="1.87" fill="#E04B5A"/></g><g class="conf"><rect x="215.07" width="6.54" height="10.28" rx="1.87" fill="#F5B400"/></g><g id="counter"><rect x="88.84" y="153.35" width="168.31" height="9.35" rx="2.80" fill="#EE7203"/><rect x="98.19" y="162.70" width="149.61" height="20.57" rx="2.80" fill="#2F5A40"/></g><g id="bag"><rect x="140.27" y="72.93" width="65.45" height="80.41" rx="3.74" fill="#C99A68"/><rect x="140.27" y="144.00" width="65.45" height="9.35" rx="1.87" fill="#A9794A"/><rect x="137.46" y="71.06" width="71.06" height="13.09" rx="2.80" fill="#B38554"/><rect x="169.25" y="74.80" width="7.48" height="4.67" rx="0.93" fill="#D9D9D9"/><path d="M156.16 112.21C159.28 107.84 162.40 107.84 165.51 112.21M180.48 112.21C183.59 107.84 186.71 107.84 189.83 112.21" stroke="#3A2412" stroke-width="2.80" stroke-linecap="round"/><path d="M164.58 119.68C170.19 127.16 175.80 127.16 181.41 119.68H164.58Z" fill="#3A2412"/><circle opacity="0.55" cx="151.49" cy="119.69" r="4.67" fill="#F09A7E"/><circle opacity="0.55" cx="194.50" cy="119.69" r="4.67" fill="#F09A7E"/></g><g class="spark"><path d="M115.54 52C115.54 56.36 117.72 58.54 122.09 58.54C117.72 58.54 115.54 60.72 115.54 65.09C115.54 60.72 113.36 58.54 109 58.54C113.36 58.54 115.54 56.36 115.54 52Z" fill="#F5B400"/></g><g class="spark"><path d="M111.61 131C111.61 134.74 113.48 136.61 117.22 136.61C113.48 136.61 111.61 138.48 111.61 142.22C111.61 138.48 109.74 136.61 106 136.61C109.74 136.61 111.61 134.74 111.61 131Z" fill="#EE7203"/></g><g class="spark"><path d="M224.42 126.23C224.42 129.35 225.98 130.91 229.10 130.91C225.98 130.91 224.42 132.46 224.42 135.58C224.42 132.46 222.87 130.91 219.75 130.91C222.87 130.91 224.42 129.35 224.42 126.23Z" fill="#F5B400"/></g><g id="bubble"><g transform="translate(252 61.70) scale(1.1) translate(-220 -65.70)"><path d="M220 65.70L256.11 56.07V72.92L220 65.70Z" fill="#EE7203"/><circle cx="268.14" cy="64.5" r="32.5" fill="#EE7203"/><text x="268.3" y="56.4" text-anchor="middle" fill="#fff" font-family="Onest,Arial" font-weight="700" font-size="8.43">Заказ</text><text x="268.1" y="75.7" text-anchor="middle" fill="#fff" font-family="Onest,Arial" font-weight="800" font-size="20.46">M13</text></g></g></svg>`,
@@ -885,7 +978,7 @@ const R=()=>S.rest||RESTS[0];
 const RECS=SAUCES;
 const PAST=[['combo',1],['bighit',1]];
 
-const S={delayPop:true,noEta:false,rest:null,cart:[],order:null,stack:['home'],offset:0,notifOff:true,notif:'unknown',recv:'counter',takeaway:true,pay:'card',saveCard:true,charity:false,email:'',log:[],t0:Date.now()};
+const S={delayPop:true,noEta:false,rest:null,cart:[],order:null,stack:['home'],offset:0,notifOff:true,notif:'unknown',recv:'counter',takeaway:true,pay:'card',saveCard:true,charity:false,email:'',emailErr:0,log:[],t0:Date.now()};
 let isMob=false, scale=1;
 
 /* ---------- utils ---------- */
@@ -905,7 +998,12 @@ const lsub=c=>{const p=P[c.id],o=[];if(p.combo)o.push(...c.cfg.parts);if(c.cfg.o
 const cfgKey=(id,cfg)=>base(id)+'|'+JSON.stringify(cfg);
 const cartQty=()=>S.cart.reduce((s,c)=>s+c.q,0);
 const total=()=>S.cart.reduce((s,c)=>s+c.q*unit(c),0);
-const cook=()=>{const q=cartQty();return q?Math.min(15,5+q):6};
+/* Время приготовления. Готовое (соусы, десерты, напитки, пакет) только кладём в пакет;
+   бургеры собирают ~4 мин, комбо ~5 (бургер + фри параллельно), фри/наггетсы ~3.
+   Кухня работает параллельно: каждая следующая горячая позиция +½ мин, плюс 1 мин на упаковку. */
+const PREP=id=>{const b=base(id),p=P[b];if(SAUCES.includes(b)||['bag','whoopie'].includes(b))return 0;if(p.combo)return 5;if(['fries','medal'].includes(b))return 3;if(b==='molangcPair')return 5;return 4};
+const cookOf=items=>{let mx=0,hot=0;items.forEach(c=>{const t=PREP(c.id);if(t){mx=Math.max(mx,t);hot+=c.q}});return hot?Math.min(15,1+mx+Math.ceil((hot-1)/2)):2};
+const cook=()=>cookOf(S.cart);
 const MIN=60000;
 const ICON={
   warn:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M10.3 3.9 2.4 17.6A2 2 0 0 0 4.1 20.6h15.8a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z" fill="#EE7203"/><path d="M12 9v4.5" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/><circle cx="12" cy="16.8" r="1.3" fill="#fff"/></svg>',
@@ -1209,13 +1307,13 @@ function renderCheckout(){
     <div class="opts">${opt('card','visa','Новой картой','pay',S.pay)}${opt('sber','sberpay','SberPay','pay',S.pay)}${opt('sbp','sbp','СБП + QR','pay',S.pay)}</div>
     ${S.pay==='card'?`<div class="wbox tgl">${ICON.info}<span>Сохранить карту</span><button class="sw${S.saveCard?' on':''}" data-sw="saveCard" role="switch" aria-checked="${S.saveCard}" aria-label="Сохранить карту"></button></div>`:''}
     <h3 style="margin:18px 0 0">Эл. почта для отправки чека</h3>
-    <label class="field"><input id="email" type="email" placeholder="Укажи адрес эл. почты" value="${S.email}" autocomplete="off">${ICON.chev}</label>
-    <div class="note">Адрес эл. почты является обязательным</div></div>
+    <label class="field${S.emailErr?' err':''}"><input id="email" type="email" inputmode="email" placeholder="Укажи адрес эл. почты" value="${S.email}" autocomplete="off">${ICON.chev}</label>
+    <div class="note${S.emailErr?' err':''}" id="emailNote">${S.emailErr?(S.email.trim()?'Проверь адрес эл. почты — в нём ошибка':'Укажи эл. почту — без неё не получится оплатить'):'Адрес эл. почты является обязательным'}</div></div>
   <div class="k"><h3 style="justify-content:space-between">Поможем вместе <button class="pillbtn${S.charity?' on':''}" data-act="charity">${S.charity?'Подключено':'Подключить'}</button></h3>
     <div class="chr"><img src="data:image/webp;base64,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" alt=""><span>Округляй стоимость заказа и помогай фонду «Семья вместе»</span></div></div>`;
   const fc=$('#coFc'), mt=`≈${m} мин`; fc.hidden=!!S.noEta; if($('#coMin').textContent!==mt){$('#coMin').textContent=mt;fc.classList.remove('pop');void fc.offsetWidth;fc.classList.add('pop')}
   $('#coTotal').textContent=rub(coSum());
-  const e=$('#email'); e.oninput=()=>S.email=e.value;
+  const e=$('#email'); e.oninput=()=>{S.email=e.value;if(S.emailErr){S.emailErr=0;e.closest('.field').classList.remove('err');const n=$('#emailNote');n.classList.remove('err');n.textContent='Адрес эл. почты является обязательным'}};
 }
 
 /* ---------- PAYMENT ---------- */
@@ -1248,14 +1346,14 @@ let timers=[];
 function orderTimer(f,ms){timers.push(setTimeout(f,ms))}
 function clearTimers(){timers.forEach(clearTimeout);timers=[]}
 function notifSheet(){
-  openSheet(`<div class="bell">${ICON.bell}</div><h3>Сообщим, когда заказ будет готов</h3><p>Включите уведомления — пришлём номер заказа и время, до которого его нужно забрать</p>
+  openSheet(`<div class="bell">${ICON.bell}</div><h3>Включить уведомления?</h3><p>Статус заказа всегда виден на этом экране. С уведомлениями вы узнаете, что заказ готов, даже если свернёте приложение</p>
    <button class="cta c" data-act="notifOn">Включить уведомления</button><button class="ghost" data-act="notifLater">Не сейчас</button>`,'',()=>{if(S.notif==='unknown'){S.notif='off';log('Уведомления: шторка закрыта');renderOrder()}});
   log('Показана шторка уведомлений');
 }
 
 /* ---------- ORDER ---------- */
 function setState(st,silent){if(!S.order)return;S.order.state=st;log('Статус: '+STN[st]);paintOW();renderOrder(true);if(S.stack[S.stack.length-1]==='menu')renderMenu();if(!silent)sendPush(st)}
-const STN={confirm:'Подтверждаем заказ',accepted:'Ресторан принял заказ',cooking:'Готовится',ready:'Готов',delayA:'Задержка',delayB:'Задержка, прогноза нет'};
+const STN={confirm:'Подтверждаем заказ',accepted:'Ресторан принял заказ',cooking:'Готовится',ready:'Готов',delayA:'Задержка',delayB:'Задержка, прогноза нет',expired:'Время вышло'};
 function renderOrder(swap){
   const o=S.order; if(!o) return;
   const ready=hm(o.readyAt), st=o.state;
@@ -1264,21 +1362,28 @@ function renderOrder(swap){
   if(st==='confirm') inner=`<h2>Подтверждаем заказ</h2>${sub('Оплата прошла. Ждём, когда ресторан примет заказ','sub2')}<div class="ill an-confirm">${ILL.paid}</div><span class="dots"><i></i><i></i><i></i></span>`;
   if(st==='accepted') inner=`<h2>Ресторан принял заказ</h2>${sub('Приготовим к ≈'+ready)}<div class="ill an-paid">${ILL.paid}</div><div class="ticker one"><div><span>Скоро начнём готовить</span></div></div>`;
   if(st==='cooking') inner=`<h2>Заказ готовится</h2>${sub('Приготовим к ≈'+ready)}<div class="ill an-cook">${ILL.cook}</div><div class="ticker" aria-live="polite"><div><span>Готовим твой заказ</span><span>Всё с пылу с жару</span><span>Собираем пакет</span><span>Ты скоро его получишь</span><span>Готовим твой заказ</span></div></div>`;
-  if((st==='delayA'||st==='delayB')&&S.delayPop) inner=`<h2>Заказ готовится</h2>${sub('Заказ задерживается','eta late')}<div class="ill an-cook">${ILL.cook}</div><div class="ticker" aria-live="polite"><div><span>Готовим дольше обычного</span><span>Уже спешим</span><span>Собираем пакет</span><span>Скоро будет готов</span><span>Готовим дольше обычного</span></div></div>`;
-  else if(st==='delayA'||st==='delayB') inner=`<h2>Заказ задерживается</h2>${sub('Извините, готовим дольше обычного','sub2')}<div class="ill an-delay">${ILL.delay}</div>`;
+  const nt=st==='delayA'&&o.newReadyAt?hm(o.newReadyAt):'';
+  if((st==='delayA'||st==='delayB')&&S.delayPop) inner=`<h2>Заказ готовится</h2>${sub(nt?'Задерживается · приготовим к ≈'+nt:'Заказ задерживается','eta late')}<div class="ill an-cook">${ILL.cook}</div><div class="ticker" aria-live="polite"><div><span>Готовим дольше обычного</span><span>Уже спешим</span><span>Собираем пакет</span><span>Скоро будет готов</span><span>Готовим дольше обычного</span></div></div>`;
+  else if(st==='delayA'||st==='delayB') inner=`<h2>Заказ задерживается</h2>${sub('Извините, готовим дольше обычного','sub2')}${nt?sub('Новое время ≈'+nt,'eta late'):''}<div class="ill an-delay">${ILL.delay}</div>`;
   if(st==='ready') inner=`<h2>Заказ готов</h2><div class="ill an-ready">${ILL.ready}</div>
     <div class="rd"><div class="l">Назовите номер на выдаче</div><div class="row"><span class="num">M13</span><span class="left"><b id="left">15:00</b></span></div>
     <div class="bar"><i id="leftBar" style="width:100%"></i></div><div class="till">Заберите до ${hm(o.readyAt+15*MIN)}</div>
-    <div class="w">${ICON.info.replace('#C9C9C9','#9A9A9A')}<span>К сожалению, мы не сможем хранить заказ дольше и будем вынуждены его утилизировать, деньги за него не вернутся</span></div></div>`;
+    <div class="w">${ICON.info.replace('#C9C9C9','#9A9A9A')}<span>К сожалению, мы не сможем хранить заказ дольше 15 минут и будем вынуждены его утилизировать, деньги за него не вернутся</span></div></div>`;
+  if(st==='expired') inner=`<h2>Время вышло</h2><div class="ill exp">${ILL.expired}</div>
+    <div class="rd gone"><div class="l">Назовите номер на выдаче</div><div class="row"><span class="num">M13</span><span class="left"><b class="zero">0:00</b></span></div>
+    <div class="bar"><i class="late" style="width:0"></i></div><div class="till">Заберите до ${hm(o.readyAt+15*MIN)}</div>
+    <div class="w">${ICON.info.replace('#C9C9C9','#9A9A9A')}<span>К сожалению, мы не сможем хранить заказ дольше 15 минут и будем вынуждены его утилизировать, деньги за него не вернутся</span></div></div>`;
+  const fin=st==='ready'||st==='expired';
   const cooking=['cooking','delayA','delayB','ready'].includes(st);
-  $('#orderBody').innerHTML=(S.notif==='off'&&st!=='ready'?`<div class="nbar"><span>Уведомления выключены. Включите, чтобы узнать, когда заказ будет готов</span><button data-act="notifOn">Включить</button></div>`:'')+`<div class="sc${swap?' swap':''}"><div class="in${st==='ready'?'':' fix'}">${inner}</div></div>
-   ${st!=='ready'?`<div class="info">${ICON.info.replace('#C9C9C9','#9A9A9A')}<span>15 минут на получение начнутся, когда заказ будет готов. Неполученный заказ придётся утилизировать без возврата денег.</span></div>`:''}
+  $('#orderBody').innerHTML=(S.notif==='off'&&!fin?`<div class="nbar"><span>Уведомления выключены. Статус заказа — на этом экране</span><button data-act="notifOn">Включить</button></div>`:'')+`<div class="sc${swap?' swap':''}"><div class="in${fin?'':' fix'}">${inner}</div></div>
+   ${st==='expired'?`<div class="acts"><button class="ghost" data-act="support">Не успели по нашей вине? Напишите нам</button></div>`:''}
+   ${!fin?`<div class="info">${ICON.info.replace('#C9C9C9','#9A9A9A')}<span>15 минут на получение начнутся, когда заказ будет готов. Неполученный заказ придётся утилизировать без возврата денег.</span></div>`:''}
    <div class="mc"><button class="mp" data-act="map"><img src="data:image/webp;base64,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" alt="Карта: ресторан и вы"><span>Нажми, чтобы развернуть</span></button>
      <div class="ad"><span class="t"><b>${R().short}</b><small>${R().hrs} · ${kmS(R().km)}</small></span><button class="route" data-act="route">${ICON.route}Маршрут</button></div></div>
    <button class="comp" data-act="comp"><div class="h"><span style="font-weight:400;color:inherit"><b>Состав заказа</b><small>${(n=>n+' '+pl(n,['товар','товара','товаров']))(o.items.reduce((a,c)=>a+c.q,0))}</small></span><span>${rub(o.total)}</span></div>
      <div class="th">${o.items.slice(0,4).map(c=>`<img src="${src(P[c.id].i)}" alt="${lname(c)}">`).join('')}${ICON.chev.replace('#8A8A8A','#1C1C1C')}</div>
      <ul>${o.items.map(c=>`<li><span>${lname(c)}${c.q>1?' × '+c.q:''}</span><span>${rub(unit(c)*c.q)}</span></li>`).join('')}</ul></button>
-   ${st!=='ready'?`<div class="cancel"><button data-act="cancel">Отменить заказ</button>${cooking?'<small>Заказ уже готовим — деньги не вернутся</small>':''}</div>`:''}`;
+   ${!fin?`<div class="cancel"><button data-act="cancel">Отменить заказ</button>${cooking?'<small>Заказ уже готовим — деньги не вернутся</small>':''}</div>`:''}`;
   if((st==='delayA'||st==='delayB')&&S.delayPop&&!o.delayShown){o.delayShown=1;setTimeout(()=>{if(S.order&&S.order.state.startsWith('delay')&&S.stack.at(-1)==='order')delaySheet();else if(S.order)S.order.delayShown=0},900)}
   tick();
 }
@@ -1294,10 +1399,11 @@ function owData(){
   const sub={confirm:`<small class="mut">Ждём, когда ресторан примет заказ</small>`,
     accepted:`<small>Будет готов через <em>${mins(o.readyAt)}</em></small>`,
     cooking:`<small>Будет готов через <em>${mins(o.readyAt)}</em></small>`,
-    delayA:S.delayPop?`<small class="mut">Заказ задерживается</small>`:`<small class="mut">Готовим дольше обычного</small>`,
+    delayA:o.newReadyAt?`<small>Задерживается, будет готов через <em>${mins(o.newReadyAt)}</em></small>`:S.delayPop?`<small class="mut">Заказ задерживается</small>`:`<small class="mut">Готовим дольше обычного</small>`,
+    expired:`<small class="mut">Заказ не забрали вовремя</small>`,
     delayB:`<small class="mut">Готовим дольше обычного</small>`,
     ready:`<div class="left">осталось <em>${Math.floor(ls/60)}:${String(ls%60).padStart(2,'0')}</em></div><div class="tr"><i style="width:${(left/(15*MIN)*100).toFixed(1)}%"></i></div>`}[o.state];
-  const title={confirm:'Подтверждаем заказ',accepted:'Ресторан принял заказ',cooking:'Заказ готовится',delayA:S.delayPop?'Заказ готовится':'Заказ задерживается',delayB:'Заказ задерживается',ready:'Заказ готов'}[o.state];
+  const title={confirm:'Подтверждаем заказ',accepted:'Ресторан принял заказ',cooking:'Заказ готовится',delayA:S.delayPop?'Заказ готовится':'Заказ задерживается',delayB:'Заказ задерживается',ready:'Заказ готов',expired:'Время вышло'}[o.state];
   return {title,sub};
 }
 function paintOW(){
@@ -1329,9 +1435,9 @@ setInterval(tick,1000);
 /* ---------- LOCK / PUSH ---------- */
 function pushList(){const o=S.order;return o&&o.pushes?o.pushes.slice().sort((a,b)=>b.at-a.at):[]}
 const PUSH={
-  accepted:o=>['Ресторан принял заказ',`Заказ М13 будет готов примерно в ${hm(o.readyAt)}.`],
-  cooking:o=>['Готовим заказ М13','Сообщим, когда можно будет забрать.'],
-  delayA:o=>['Заказ М13 задерживается','Извините, готовим дольше обычного. Сообщим, когда будет готов.'],
+  cooking:o=>['Готовим заказ М13',`Будет готов примерно в ${hm(o.readyAt)}.`],
+  delayA:o=>['Заказ М13 задерживается',o.newReadyAt?`Извините, готовим дольше обычного. Будет готов примерно в ${hm(o.newReadyAt)}.`:'Извините, готовим дольше обычного. Сообщим, когда будет готов.'],
+  delayB:o=>['Заказ М13 задерживается','Извините, готовим дольше обычного. Сообщим, когда будет готов.'],
   ready:o=>['Заказ М13 готов',`Заберите до ${hm(o.readyAt+15*MIN)}. Назовите номер на выдаче.`],
   rem:o=>['Заказ М13 ждёт вас',`Осталось 5 минут — заберите до ${hm(o.readyAt+15*MIN)}.`]};
 let pushN=0;
@@ -1351,7 +1457,11 @@ function banner(p){
   clearTimeout(bnT); bnT=setTimeout(hideBanner,5000); log('Пуш пришёл: '+p.title);
 }
 function hideBanner(){const b=$('#pbn');b.classList.remove('on');setTimeout(()=>{if(!b.classList.contains('on'))b.hidden=true},500)}
-function checkPush(){const o=S.order; if(o&&o.state==='cooking'&&now()>=o.readyAt){clearTimers();setState('ready');return} if(o&&o.state==='ready'&&!o.remSent&&now()>=o.readyAt+10*MIN){o.remSent=1;sendPush('rem')}}
+function checkPush(){const o=S.order; if(!o)return;
+  if(o.state==='cooking'&&now()>=o.readyAt){clearTimers();setState('ready');return}
+  if(o.state==='delayA'&&o.newReadyAt&&now()>=o.newReadyAt){clearTimers();o.readyAt=o.newReadyAt;o.remSent=0;setState('ready');return}
+  if(o.state==='ready'&&!o.remSent&&now()>=o.readyAt+10*MIN&&now()<o.readyAt+15*MIN){o.remSent=1;sendPush('rem')}
+  if(o.state==='ready'&&now()>=o.readyAt+15*MIN){closeSheet();setState('expired',1)}}
 (()=>{const b=$('#pbn');let y0=null;
   b.addEventListener('pointerdown',e=>{y0=e.clientY});
   b.addEventListener('pointerup',e=>{const dy=y0==null?0:e.clientY-y0;y0=null;if(dy<-15){hideBanner();return}
@@ -1387,12 +1497,12 @@ let lockT;function unlock(){const L=$('#lock');L.classList.add('gone');$('#homeb
 function ensureOrder(){
   if(S.order) return; if(!S.rest) S.rest=RESTS[0];
   const t=now()-2*MIN;
-  const its=PAST.map(([id,q])=>({id,q,cfg:defCfg(id)}));S.order={items:its,total:its.reduce((s,c)=>s+unit(c)*c.q,0),paidAt:t,cook:7,readyAt:t+7*MIN,state:'cooking',pushes:[]};
+  const its=PAST.map(([id,q])=>({id,q,cfg:defCfg(id)}));const ck=cookOf(its);S.order={items:its,total:its.reduce((s,c)=>s+unit(c)*c.q,0),paidAt:t,cook:ck,readyAt:t+ck*MIN,state:'cooking',pushes:[]};
 }
 function task(k){
   clearTimers(); closeSheet(); unlock(); $('#mod').classList.remove('on');
   if(k==='1'){
-    Object.assign(S,{farClosed:{},notif:'unknown',cartOk:false,afterPick:null,cart:[],order:null,rest:null,offset:0,email:'',recv:'counter',takeaway:true,pay:'card',saveCard:true,useBonus:false,charity:false,noEta:false,notifOff:true,log:[],t0:Date.now()});
+    Object.assign(S,{farClosed:{},notif:'unknown',cartOk:false,afterPick:null,cart:[],order:null,rest:null,offset:0,email:'',emailErr:0,recv:'counter',takeaway:true,pay:'card',saveCard:true,useBonus:false,charity:false,noEta:false,notifOff:true,log:[],t0:Date.now()});
     sel=null; lockSeen=new Set(); bnSeen=new Set(); hideBanner(); lockOpen=false; closeDlg();
     const es=$('#etaSw'); es.classList.remove('on'); es.setAttribute('aria-checked','false');
     const ns=$('#notifSw'); ns.classList.add('on'); ns.setAttribute('aria-checked','true');
@@ -1401,7 +1511,7 @@ function task(k){
     buildMenu(); resetTo(['home']); renderList(); ms.scrollTop=0; setChip('new'); $$('.scroll').forEach(x=>x.scrollTop=0);
     $('#farWrap').innerHTML='';$('#farWrap').dataset.r='';$('#log').textContent=''; log('— Задание 1: заказать по пути (полный сброс) —')}
   if(k==='2'){ensureOrder();const o=S.order;if(o.newReadyAt)o.readyAt=o.newReadyAt;warp(o.readyAt+300-now());o.state='ready';S.notif='on';o.pushes=[];o.remSent=0;sendPush('accepted',1,o.paidAt+3200);sendPush('cooking',1,o.paidAt+30000);sendPush('ready',1,o.readyAt);resetTo(['menu','order']);setTimeout(showLock,50);log('— Задание 2: получить заказ —')}
-  if(k==='3a'||k==='3b'){ensureOrder();const o=S.order;warp(o.paidAt+5*MIN-now());o.newReadyAt=o.readyAt+8*MIN;o.delayShown=0;o.state='delayA';resetTo(['menu','order']);$('#orderScroll').scrollTop=0;setTimeout(()=>sendPush('delayA'),900);log(`— Задание ${k==='3a'?'3А':'3Б'}: задержка —`)}
+  if(k==='3a'||k==='3b'){ensureOrder();const o=S.order;warp(o.paidAt+5*MIN-now());o.firstReady=o.readyAt;o.delayMin=5;o.newReadyAt=o.readyAt+5*MIN;o.delayShown=0;o.state='delayA';resetTo(['menu','order']);$('#orderScroll').scrollTop=0;setTimeout(()=>sendPush('delayA'),900);log(`— Задание ${k==='3a'?'3А':'3Б'}: задержка —`)}
   tick();
 }
 
@@ -1409,7 +1519,7 @@ function task(k){
 function renderHome(){
   paintOW();
   const h=new Date(now()).getHours();
-  $('#greet').textContent=h>=5&&h<12?'Доброе утро!':h>=12&&h<16?'Добрый день!':h>=16&&h<23?'Добрый вечер!':'Доброй ночи!';
+  $('#greet').textContent=h>=5&&h<12?'Доброе утро!':h>=12&&h<17?'Добрый день!':h>=17&&h<23?'Добрый вечер!':'Доброй ночи!';
   if(!S.rest) setTimeout(()=>{if(S.stack.at(-1)==='home'&&!S.rest&&!$('#sheet').classList.contains('on')) askSheet()},650);
 }
 function askSheet(){
@@ -1483,7 +1593,7 @@ function selectRest(id,fromMap){
 }
 function pickRest(id){
   const r=RESTS.find(x=>x.id===id), changed=S.rest&&S.rest.id!==id;
-  S.rest=r; sel=id; S.farClosed=S.farClosed||{}; S.farClosed[id]=1; log('Выбрал предприятие: '+r.short+' ('+kmS(r.km)+')');
+  S.rest=r; sel=id; log('Выбрал предприятие: '+r.short+' ('+kmS(r.km)+')');
   back(); if(changed) toast('Предприятие изменено');
   if(S.afterPick==='cart'){S.afterPick=null;S.cartOk=true;setTimeout(()=>go('cart'),450)}
 }
@@ -1559,7 +1669,23 @@ $('#veil2').onclick=closeDlg;
 $('#cartBtn').onclick=e=>{e.stopPropagation();confirmCart()};
 $('#clearBtn').onclick=()=>{S.cart=[];updateCounts();renderCart();log('Очистил корзину')};
 $('#cartBottom').addEventListener('click',e=>{if(e.target.closest('#toCheckout'))go('checkout')});
-$('#payBtn').onclick=()=>paySheet();
+const okMail=v=>/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test((v||'').trim());
+$('#payBtn').onclick=()=>{
+  if(!okMail(S.email)){S.emailErr=1;renderCheckout();const f=$('#email').closest('.field');f.scrollIntoView({behavior:'smooth',block:'center'});f.classList.remove('shake');void f.offsetWidth;f.classList.add('shake');log(S.email.trim()?'Оплата: ошибка в эл. почте':'Оплата без эл. почты — показана ошибка');return}
+  paySheet()};
+/* чек по тапу на «Итого» */
+function receiptSheet(){
+  const sum=total(), fin=coSum(), n=cartQty(), bon=S.useBonus?5:0, round=fin-(sum-bon);
+  openSheet(`<div class="rcpt"><h3>Ваш заказ</h3><ul>${S.cart.map(c=>`<li><span>${lname(c)}${c.q>1?' × '+c.q:''}${(l=>l.length?`<small>${l.join(', ')}</small>`:'')(lsub(c).filter(x=>!/^(Добавь|Выбери)/.test(x)))}</span><b>${rub(unit(c)*c.q)}</b></li>`).join('')}</ul><hr>
+   <ul><li><span>Товары, ${n} шт.</span><b>${rub(sum)}</b></li>
+   <li><span>Сервисный сбор</span><b class="g">Бесплатно</b></li>
+   ${bon?`<li><span>Списание бонусов</span><b class="g">−${rub(bon)}</b></li>`:''}
+   ${round?`<li><span>Округление для фонда «Семья вместе»</span><b>+${rub(round)}</b></li>`:''}
+   <li class="tot"><span>Итого</span><span>${rub(fin)}</span></li></ul>
+   <button class="cta c" data-act="closeSheet">Понятно</button></div>`,'');
+  log('Открыт чек «Итого»');
+}
+$('#coTotal').closest('.s').onclick=receiptSheet;
 $('#repeatBtn').onclick=()=>{
   openSheet(`<h3>Прошлый заказ</h3><p>12 октября · ${rub(PAST.reduce((a,[id,q])=>a+unit({id,cfg:defCfg(id)})*q,0))}</p><div class="list">${PAST.map(([id])=>`<button data-act="closeSheet" style="pointer-events:none">${P[id].n}<span style="color:var(--grey)">${rub(P[id].p)}</span></button>`).join('')}</div><button class="cta c" id="repGo" style="margin-top:14px">Повторить заказ</button>`);
   log('Открыт прошлый заказ');
@@ -1582,22 +1708,32 @@ setInterval(nPaint,800);
 function jumpState(st){
   if(st==='lock'){mod.classList.remove('on');ensureOrder();showLock();return}
   if(st==='plus5'){warp(5*MIN);if(S.order&&S.stack.at(-1)==='order')renderOrder();tick();log('Модератор: +5 минут');return}
-  if(st==='left5'){ // заказ готов, до конца хранения 5 минут — приходит пуш-напоминание «Осталось 5 минут»
+  if(st==='left5'||st==='left2'||st==='expired'){ // заказ готов; до конца хранения 5 / 2 / 0 минут
     clearTimers(); closeSheet(); unlock(); mod.classList.remove('on'); ensureOrder(); const o=S.order;
-    if(o.state!=='ready'&&o.newReadyAt) o.readyAt=o.newReadyAt;
-    const was=o.state; o.state='ready'; o.remSent=0; o.delayShown=0;
-    if(was!=='ready') sendPush('ready',0,o.readyAt); // пуш «Заказ готов» — в истории, без баннера
-    warp(o.readyAt+10*MIN-now());
-    resetTo(['menu','order']); $('#orderScroll').scrollTop=0; log('Модератор: до конца хранения 5 минут'); setTimeout(tick,700); return}
+    if(o.state!=='ready'&&o.state!=='expired'&&o.newReadyAt) o.readyAt=o.newReadyAt;
+    const was=o.state, left={left5:5,left2:2,expired:0}[st];
+    if(was!=='ready'&&was!=='expired') sendPush('ready',0,o.readyAt); // пуш «Заказ готов» — в истории, без баннера
+    if(left<5&&!o.remSent) sendPush('rem',0,o.readyAt+10*MIN);        // напоминание «Осталось 5 минут» уже было
+    o.remSent=left<5?1:0; o.delayShown=0; o.state=left?'ready':'expired';
+    warp(o.readyAt+(15-left)*MIN-now());
+    resetTo(['menu','order']); $('#orderScroll').scrollTop=0; renderOrder(true);
+    log(left?'Модератор: до конца хранения '+left+' мин':'Модератор: время вышло'); setTimeout(tick,700); return}
+  let dm=0; if(st==='delay5'||st==='delay15'){dm=st==='delay5'?5:15; st='delayA'}
   clearTimers(); closeSheet(); unlock(); mod.classList.remove('on'); ensureOrder(); const o=S.order;
-  let at;o.firstReady=o.firstReady||o.readyAt;if(['confirm','accepted','cooking'].includes(st)){o.newReadyAt=null;o.readyAt=o.firstReady}
-  at={confirm:o.paidAt+5000,accepted:o.paidAt+30000,cooking:o.paidAt+3*MIN,delayA:o.paidAt+5*MIN,delayB:o.paidAt+5*MIN,ready:o.readyAt+300}[st];
   o.firstReady=o.firstReady||o.readyAt;
-  if(['confirm','accepted','cooking'].includes(st)){o.newReadyAt=null;o.readyAt=o.firstReady}
+  if(['confirm','accepted','cooking','delayA','delayB'].includes(st)){o.readyAt=o.firstReady}
+  if(['confirm','accepted','cooking'].includes(st)){o.newReadyAt=null;o.delayMin=0}
+  let at={confirm:o.paidAt+5000,accepted:o.paidAt+30000,cooking:o.paidAt+3*MIN,delayA:o.paidAt+5*MIN,delayB:o.paidAt+5*MIN,ready:o.readyAt+300}[st];
   if(st==='ready'&&o.newReadyAt){o.readyAt=o.newReadyAt;at=o.readyAt+300}
-  warp(at-now()); if((st==='delayA'||st==='delayB')&&!o.newReadyAt) o.newReadyAt=o.readyAt+8*MIN;
+  // задержку объявляем «сейчас», если заказ уже готовится — часы не перематываем
+  if((st==='delayA'||st==='delayB')&&['accepted','cooking','delayA','delayB'].includes(o.state)) at=now();
+  warp(at-now());
+  let dch=false;
+  if(st==='delayA'){const m=dm||o.delayMin||5; dch=m!==o.delayMin; o.delayMin=m; o.newReadyAt=Math.max(o.firstReady,now())+m*MIN}
+  if(st==='delayB'){o.newReadyAt=null}
   if(st==='delayA'||st==='delayB') o.noForecast=st==='delayB';
-  const ch=o.state!==st; if(ch) o.delayShown=0; o.state=st; if(st!=='ready') o.remSent=0; resetTo(['menu','order']); $('#orderScroll').scrollTop=0; tick(); log('Модератор: статус → '+STN[st]); if(ch&&st!=='confirm') setTimeout(()=>sendPush(st),700);
+  const ch=o.state!==st||dch; if(ch) o.delayShown=0; o.state=st; if(st!=='ready') o.remSent=0; resetTo(['menu','order']); $('#orderScroll').scrollTop=0; renderOrder(true); tick();
+  log('Модератор: статус → '+STN[st]+(st==='delayA'?' +'+o.delayMin+' мин (≈'+hm(o.newReadyAt)+')':'')); if(ch&&st!=='confirm') setTimeout(()=>sendPush(st),700);
 }
 $('#etaSw').onclick=e=>{S.noEta=!S.noEta;e.currentTarget.classList.toggle('on',S.noEta);e.currentTarget.setAttribute('aria-checked',S.noEta);updateCounts();const top=S.stack.at(-1);if(top==='cart'||top==='checkout')render(top);log(S.noEta?'Модератор: прогноз скрыт':'Модератор: прогноз показан')};
 $('#delaySw').onclick=e=>{S.delayPop=!S.delayPop;e.currentTarget.classList.toggle('on',S.delayPop);e.currentTarget.setAttribute('aria-checked',S.delayPop);if(S.order){S.order.delayShown=0;paintOW();if(S.stack.at(-1)==='order')renderOrder()}log('Модератор: задержка '+(S.delayPop?'поп-апом':'отдельным статусом'))};
@@ -1644,7 +1780,9 @@ function rcApply(m){
 ['etaSw','delaySw','notifSw'].forEach(id=>{const el=$('#'+id);el.addEventListener('click',()=>rcCmd({c:'set',id,v:el.classList.contains('on')}))});
 if(RC_ROLE==='resp'){
   let last=0;
-  const scrName=()=>NAMES[S.stack[S.stack.length-1]]||'';
+  const scrName=()=>{let s=NAMES[S.stack[S.stack.length-1]]||'';const o=S.order;
+    if(o){if(o.state==='ready')s+=' · заберите до '+hm(o.readyAt+15*MIN);else if(o.state==='expired')s+=' · время вышло';else if(o.state==='delayA'&&o.newReadyAt)s+=' · задержка, готов ≈'+hm(o.newReadyAt);else if(['accepted','cooking'].includes(o.state))s+=' · готов ≈'+hm(o.readyAt)}
+    return s};
   const beat=c=>{rcSend({c,scr:scrName()});last=Date.now()};
   rcConnect((m,t)=>{
       if(m.c==='ping'){beat('hb');return}
