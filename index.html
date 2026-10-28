@@ -800,7 +800,7 @@ body.mob .sheet{padding-bottom:calc(20px + env(safe-area-inset-bottom,0px))}
   <button class="tk" data-task="2"><b>2 · Получить заказ</b><span>Экран блокировки с пушем «Заказ готов»</span></button>
   <button class="tk" data-task="3a"><b>3 · Задержка</b><span>Поп-ап «Заказ задерживается», без нового времени</span></button>
   <div class="cap">Быстро переключить статус заказа</div>
-  <div class="stg"><button data-st="confirm">Подтверждаем</button><button data-st="accepted">Принят</button><button data-st="cooking">Готовится</button><button data-st="delayA">Задержка</button><button data-st="ready">Готов</button><button data-st="plus5">+5 минут</button></div>
+  <div class="stg"><button data-st="confirm">Подтверждаем</button><button data-st="accepted">Принят</button><button data-st="cooking">Готовится</button><button data-st="delayA">Задержка</button><button data-st="ready">Готов</button><button data-st="left2">Осталось 2 мин</button><button data-st="plus5">+5 минут</button></div>
   <div style="color:var(--grey);font-size:12px;margin-top:6px">При смене статуса пуш приходит сам — если участник включил уведомления.</div>
   <div class="cap">Уведомления <span id="nState" style="text-transform:none;letter-spacing:0;font-weight:600;color:var(--ink)"></span></div>
   <div class="stg"><button data-nt="on">Включить</button><button data-nt="lock">Блокировка</button><button data-nt="again">Повторить пуш</button></div>
@@ -929,6 +929,10 @@ function log(ev){
 var RC_Q=[];
 const RC_P=new URLSearchParams(location.search);
 var RC_ROLE=RC_P.has('mod')?'mod':(RC_P.get('room')?'resp':null);
+/* Ссылку модератора (?mod&room=…) случайно отправили респонденту? Модератором считаем только браузер, который сам создал эту комнату. */
+function rcKnown(){let k=[];try{k=JSON.parse(localStorage.getItem('rcRooms')||'[]');k.push(localStorage.getItem('rcRoom'))}catch(_){}return k}
+function rcRemember(r){try{const k=JSON.parse(localStorage.getItem('rcRooms')||'[]').filter(x=>x!==r);k.push(r);localStorage.setItem('rcRooms',JSON.stringify(k.slice(-50)));localStorage.setItem('rcRoom',r)}catch(_){}}
+if(RC_ROLE==='mod'&&RC_P.get('room')&&!rcKnown().includes(RC_P.get('room'))) RC_ROLE='resp';
 let toastT;
 function toast(t){const e=$('#toast');e.textContent=t;e.classList.add('on');clearTimeout(toastT);toastT=setTimeout(()=>e.classList.remove('on'),2200)}
 
@@ -1568,6 +1572,13 @@ setInterval(nPaint,800);
 function jumpState(st){
   if(st==='lock'){mod.classList.remove('on');ensureOrder();showLock();return}
   if(st==='plus5'){S.offset+=5*MIN;tick();log('Модератор: +5 минут');return}
+  if(st==='left2'){ // заказ готов, до конца хранения 2 минуты
+    clearTimers(); closeSheet(); unlock(); mod.classList.remove('on'); ensureOrder(); const o=S.order;
+    if(o.state!=='ready'&&o.newReadyAt) o.readyAt=o.newReadyAt;
+    const was=o.state; o.state='ready'; o.remSent=1; o.delayShown=0;
+    S.offset+=o.readyAt+13*MIN-now();
+    resetTo(['menu','order']); $('#orderScroll').scrollTop=0; tick(); log('Модератор: до конца хранения 2 минуты');
+    if(was!=='ready') setTimeout(()=>sendPush('ready'),700); return}
   clearTimers(); closeSheet(); unlock(); mod.classList.remove('on'); ensureOrder(); const o=S.order;
   let at;o.firstReady=o.firstReady||o.readyAt;if(['confirm','accepted','cooking'].includes(st)){o.newReadyAt=null;o.readyAt=o.firstReady}
   at={confirm:o.paidAt+5000,accepted:o.paidAt+30000,cooking:o.paidAt+3*MIN,delayA:o.paidAt+5*MIN,delayB:o.paidAt+5*MIN,ready:o.readyAt+300}[st];
@@ -1593,16 +1604,24 @@ const RC_CID=Math.random().toString(36).slice(2,10);
 const RC_HOST='https://ntfy.sh/';
 let RC_ROOM=RC_P.get('room');
 function rcNewRoom(){let s='';const a='abcdefghijkmnpqrstuvwxyz23456789';for(let i=0;i<12;i++)s+=a[Math.floor(Math.random()*a.length)];return 'vit-'+s}
-function rcSend(m){if(!RC_ROOM)return;m.f=RC_CID;fetch(RC_HOST+RC_ROOM,{method:'POST',body:JSON.stringify(m)}).catch(()=>{})}
+function rcSend(m){if(!RC_ROOM)return;m.f=RC_CID;m.r=RC_ROLE;fetch(RC_HOST+RC_ROOM,{method:'POST',body:JSON.stringify(m),keepalive:true}).catch(()=>{})}
 function rcCmd(m){if(RC_ROLE!=='mod'||RC_APPLY)return;rcSend(m);setTimeout(()=>mod.classList.add('on'),30)}
-let RC_ES=null;
-function rcConnect(onMsg,onState){
+/* Устойчивое подключение: телефон блокируется / браузер сворачивается (например, при переходе в Zoom) —
+   соединение рвётся. При возврате подключаемся заново и догоняем пропущенные команды. */
+let RC_ES=null, RC_LAST='', RC_SEEN=new Set(), RC_OPEN=false, RC_H={};
+function rcOpen(since){
+  if(!RC_ROOM||!RC_H.msg)return;
   if(RC_ES)RC_ES.close();
-  const es=new EventSource(RC_HOST+RC_ROOM+'/sse'); RC_ES=es;
-  es.onopen=()=>onState(true);
-  es.onerror=()=>onState(false);
-  es.onmessage=e=>{try{const d=JSON.parse(e.data);if(d.event!=='message')return;const m=JSON.parse(d.message);if(m.f===RC_CID)return;onMsg(m)}catch(_){}}
+  const es=new EventSource(RC_HOST+RC_ROOM+'/sse'+(since?'?since='+encodeURIComponent(since):'')); RC_ES=es;
+  es.onopen=()=>{if(RC_ES!==es)return;RC_OPEN=true;RC_H.state(true)};
+  es.onerror=()=>{if(RC_ES!==es)return;RC_OPEN=false;RC_H.state(false);if(es.readyState===2)setTimeout(()=>{if(RC_ES===es)rcOpen(RC_LAST)},2000)};
+  es.onmessage=e=>{if(RC_ES!==es)return;try{const d=JSON.parse(e.data);if(d.event!=='message'||RC_SEEN.has(d.id))return;RC_SEEN.add(d.id);RC_LAST=d.id;const m=JSON.parse(d.message);if(m.f===RC_CID)return;RC_H.msg(m,(d.time||0)*1000||Date.now())}catch(_){}}
 }
+function rcConnect(onMsg,onState,since){RC_H={msg:onMsg,state:onState};RC_SEEN=new Set();RC_LAST='';RC_OPEN=false;rcOpen(since)}
+function rcWake(){if(!RC_H.msg)return;if(!RC_ES||RC_ES.readyState!==1)rcOpen(RC_LAST);else if(RC_H.wake)RC_H.wake()}
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)rcWake()});
+addEventListener('pageshow',rcWake);addEventListener('focus',rcWake);addEventListener('online',rcWake);
+setInterval(()=>{if(RC_ES&&RC_ES.readyState===2)rcOpen(RC_LAST)},5000);
 function rcApply(m){
   RC_APPLY=true;
   try{
@@ -1616,42 +1635,52 @@ function rcApply(m){
 if(RC_ROLE==='resp'){
   let last=0;
   const scrName=()=>NAMES[S.stack[S.stack.length-1]]||'';
-  rcConnect(m=>{ if(m.c==='ping'){rcSend({c:'hb',scr:scrName()});last=Date.now();return} if(m.c&&m.c!=='log'&&m.c!=='hb') rcApply(m) },
-    ok=>{ if(ok){rcSend({c:'hi',scr:scrName()});last=Date.now()} });
+  const beat=c=>{rcSend({c,scr:scrName()});last=Date.now()};
+  rcConnect((m,t)=>{
+      if(m.c==='ping'){beat('hb');return}
+      // команды модератора; пропущенные за время обрыва применяем, но не старше 15 минут
+      if(['task','st','nt','set'].includes(m.c)&&m.r!=='resp'&&Date.now()-t<15*60000) rcApply(m);
+    },
+    ok=>{ if(ok) beat('hi') });
+  RC_H.wake=()=>beat('hb');
   setInterval(()=>{
     if(RC_Q.length){const lines=RC_Q.splice(0,RC_Q.length);rcSend({c:'log',lines,scr:scrName()});last=Date.now()}
-    else if(Date.now()-last>20000){rcSend({c:'hb',scr:scrName()});last=Date.now()}
+    else if(Date.now()-last>15000) beat('hb');
   },4000);
 }
 if(RC_ROLE==='mod'){
   if(!RC_ROOM){try{RC_ROOM=localStorage.getItem('rcRoom')}catch(_){}}
   if(!RC_ROOM) RC_ROOM=rcNewRoom();
-  const setRoom=r=>{RC_ROOM=r;try{localStorage.setItem('rcRoom',r)}catch(_){}
+  const setRoom=r=>{RC_ROOM=r;rcRemember(r);
     history.replaceState(null,'',location.pathname+'?mod&room='+r);
     $('#rcLink').value=location.origin+location.pathname+'?room='+r;
     $('#rcResp').textContent='Респондент ещё не открыл ссылку';$('#rcDot2').className='';seen=0;
     S.log=[];$('#log').textContent='Пока пусто';
-    rcConnect(onMsg,ok=>{$('#rcSt').textContent=ok?'Связь есть':'Нет связи — переподключаюсь…';$('#rcDot').className=ok?'ok':'bad';if(ok)rcSend({c:'ping'})});
+    // since=30m — после перезагрузки страницы модератора журнал и статус респондента восстанавливаются
+    rcConnect(onMsg,ok=>{$('#rcSt').textContent=ok?'Связь есть':'Нет связи — переподключаюсь…';$('#rcDot').className=ok?'ok':'bad';if(ok)rcSend({c:'ping'})},'30m');
   };
+  RC_H.wake=()=>rcSend({c:'ping'});
   let seen=0, scr='';
-  const onMsg=m=>{
-    if(!['hi','hb','log'].includes(m.c))return;
-    seen=Date.now(); if(m.scr) scr=m.scr;
-    if(m.c==='hi'){S.log.push('—— респондент открыл ссылку ——')}
+  const onMsg=(m,t)=>{
+    if(!['hi','hb','log'].includes(m.c)||m.r==='mod')return;
+    const wasOn=seen&&t-seen<45000;
+    seen=Math.max(seen,t); if(m.scr) scr=m.scr;
+    if(m.c==='hi'&&!wasOn){S.log.push('—— респондент на связи ——')}
     if(m.c==='log'&&m.lines){S.log.push(...m.lines)}
     if(m.c!=='hb'){const L=$('#log');L.textContent=S.log.join('\n')||'Пока пусто';L.scrollTop=1e6}
     paintResp();
   };
-  const paintResp=()=>{if(!seen)return;const s=Math.round((Date.now()-seen)/1000);const on=s<45;
+  const ago=s=>s<60?s+' с':Math.round(s/60)+' мин';
+  const paintResp=()=>{if(!seen)return;const s=Math.max(0,Math.round((Date.now()-seen)/1000));const on=s<45;
     $('#rcDot2').className=on?'ok':'bad';
-    $('#rcResp').textContent=on?`Респондент на связи${scr?' · экран: '+scr:''}`:`Респондент пропал ${s} с назад${scr?' · был на экране: '+scr:''}`};
+    $('#rcResp').textContent=on?`Респондент на связи${scr?' · экран: '+scr:''}`:`Респондент не на связи уже ${ago(s)}${scr?' · был на экране: '+scr:''}. Попросите его вернуться во вкладку с прототипом — подключение восстановится само, команды дойдут`};
   setInterval(paintResp,3000);
   $('#rcBox').hidden=false;
   $('#rcCopy').onclick=()=>{const v=$('#rcLink').value;navigator.clipboard.writeText(v).then(()=>toast('Ссылка скопирована'),()=>{$('#rcLink').select()})};
   $('#rcLink').onclick=e=>e.target.select();
   $('#rcNew').onclick=()=>{setRoom(rcNewRoom());toast('Новая ссылка готова')};
   $('#copyLog').onclick=()=>{navigator.clipboard.writeText(S.log.join('\n')).then(()=>toast('Журнал скопирован'))};
-  $('#hint').innerHTML='<b>Режим модератора</b>Отправьте респонденту ссылку из панели справа. Кнопки панели меняют экран у него на телефоне, а в журнале видно, что он нажимает.';
+  $('#hint').innerHTML='<b>Режим модератора</b>Отправьте респонденту ссылку из панели справа (не из адресной строки). Кнопки панели меняют экран у него на телефоне, а в журнале видно, что он нажимает.';
   setRoom(RC_ROOM);
   setTimeout(()=>mod.classList.add('on'),400);
 }
