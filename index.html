@@ -642,6 +642,16 @@ body.mob .sheet{padding-bottom:calc(20px + env(safe-area-inset-bottom,0px))}
 .rcpt .tot{font-size:18px;font-weight:700;padding-top:10px}
 .rcpt .tot span:first-child{color:var(--ink)}
 .rcpt .cta{margin-top:16px}
+/* «Итого» — как в приложении */
+.sheet.rsheet{padding-top:44px}
+.sheet.rsheet .grab{display:none}
+.rsheet .rcpt ul{display:flex;flex-direction:column;gap:18px}
+.rsheet .rcpt li{padding:0;font-size:17px}
+.rsheet .rcpt li span:first-child{color:var(--ink)}
+.rsheet .rcpt li b{font-weight:700;color:var(--ink)}
+.rsheet .rcpt li b.bn{color:var(--orange)}
+.rsheet .rsep{border-top:1px solid var(--line);margin:22px -20px 28px}
+.rsheet .rpay{height:60px!important;border-radius:30px!important;justify-content:space-between;padding:0 24px;font-size:17px!important;margin:0}
 .psheet .big{height:220px;display:grid;place-items:center;background:var(--card);border-radius:22px;margin-bottom:16px}
 .psheet .big img{max-height:200px;mix-blend-mode:multiply}
 .psheet h3{text-align:left;font-size:20px}
@@ -1705,15 +1715,15 @@ $('#payBtn').onclick=()=>{
   paySheet()};
 /* чек по тапу на «Итого» */
 function receiptSheet(){
-  const sum=total(), fin=coSum(), n=cartQty(), bon=S.useBonus?5:0, round=fin-(sum-bon);
-  openSheet(`<div class="rcpt"><h3>Ваш заказ</h3><ul>${S.cart.map(c=>`<li><span>${lname(c)}${c.q>1?' × '+c.q:''}${(l=>l.length?`<small>${l.join(', ')}</small>`:'')(lsub(c).filter(x=>!/^(Добавь|Выбери)/.test(x)))}</span><b>${rub(unit(c)*c.q)}</b></li>`).join('')}</ul><hr>
-   <ul><li><span>Товары, ${n} шт.</span><b>${rub(sum)}</b></li>
-   <li><span>Сервисный сбор</span><b class="g">Бесплатно</b></li>
-   ${bon?`<li><span>Списание бонусов</span><b class="g">−${rub(bon)}</b></li>`:''}
-   ${round?`<li><span>Округление для фонда «Семья вместе»</span><b>+${rub(round)}</b></li>`:''}
-   <li class="tot"><span>Итого</span><span>${rub(fin)}</span></li></ul>
-   <button class="cta c" data-act="closeSheet">Понятно</button></div>`,'');
-  log('Открыт чек «Итого»');
+  const fin=coSum(), bon=Math.floor(total()*.02);
+  openSheet(`<div class="rcpt"><ul>
+   <li><span>Сумма заказа</span><b>${rub(fin)}</b></li>
+   ${S.useBonus?`<li><span>Списано бонусов</span><b>5 бонусов</b></li>`:''}
+   <li><span>Начислено бонусов</span><b class="bn">+${bon} ${pl(bon,['бонус','бонуса','бонусов'])}</b></li></ul>
+   <div class="rsep"></div>
+   <button class="cta rpay" id="rcPay"><span>Оплатить</span><span>${rub(fin)}</span></button></div>`,'rsheet');
+  $('#rcPay').onclick=()=>{log('Итого: «Оплатить»');closeSheet();setTimeout(()=>$('#payBtn').click(),320)};
+  log('Открыто «Итого»');
 }
 $('#coTotal').closest('.s').onclick=receiptSheet;
 $('#repeatBtn').onclick=()=>{
