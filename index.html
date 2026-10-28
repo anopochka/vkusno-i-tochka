@@ -1148,6 +1148,9 @@ function updateCounts(){
 function paintBtn(e){
   const id=e.dataset.btn, q=qty(id);
   const pc=e.closest('.pc,.rc'), isRc=!!e.closest('.rc');
+  if(isRc){ // кросс-продажи в корзине: всегда просто «+», количество меняют в самой корзине
+    const bt=e.closest('.bot'); if(bt) bt.classList.remove('inq','open');
+    if(e.dataset.state!=='add'){e.dataset.state='add';e.innerHTML=`<button class="add" data-add="${id}" aria-label="Добавить ${P[id].n}">${ICON.plus}</button>`} return }
   if(pc){ const bt=e.closest('.bot');
     if(!q){ if(e.dataset.state!=='add'){bt.classList.remove('inq');e.dataset.state='add';e.innerHTML=`<button class="add" data-${isRc?'add':'prod'}="${id}" aria-label="Добавить ${P[id].n}">${ICON.plus}</button>`} return }
     if(e.dataset.state!=='stp'){bt.classList.add('inq');e.dataset.state='stp';e.innerHTML=`<span class="mstp"><button data-dec="${id}" aria-label="Меньше">${ICON.minusD}</button><span class="q">${q}</span><button data-inc="${id}" aria-label="Больше">${ICON.plusD}</button></span>`;return}
