@@ -119,8 +119,10 @@ body.mob{--sb:calc(env(safe-area-inset-top,0px) + 12px)}
 .repeat{display:flex;align-items:center;gap:12px;background:var(--card-2);border-radius:18px;padding:0 10px 0 18px;height:54px;font-size:15px;width:100%;text-align:left}
 .repeat span{flex:1}
 .repeat img{width:68px;margin-top:4px}
-.chips{position:sticky;top:0;z-index:2;background:var(--white);display:flex;gap:8px;overflow-x:auto;margin:12px -16px 0;padding:10px 16px;scrollbar-width:none}
+.chips{position:sticky;top:-1px;z-index:6;background:var(--white);display:flex;gap:8px;overflow-x:auto;margin:12px -16px 0;padding:10px 16px;scrollbar-width:none}
 .chips::-webkit-scrollbar{display:none}
+/* когда чипсы прилипли — закрываем полосу над ними, чтобы под шапкой не просвечивал контент */
+.chips.stuck{box-shadow:0 -40px 0 var(--white),0 6px 10px -8px rgba(0,0,0,.12)}
 .chip{flex:none;height:36px;padding:0 14px;border-radius:18px;background:var(--card-2);font-size:14px;transition:background .25s,color .25s}
 .chip.act{background:var(--orange);color:var(--white)}
 .sec h2{font-size:22px;font-weight:700;margin:18px 0 14px;letter-spacing:-.01em}
@@ -1190,6 +1192,8 @@ function renderMenu(){
   updateCounts();
 }
 const ms=$('#menuScroll');
+const stuckChips=()=>{const c=$('#chips');if(c)c.classList.toggle('stuck',c.getBoundingClientRect().top-ms.getBoundingClientRect().top<=2)};
+ms.addEventListener('scroll',stuckChips,{passive:true});
 ms.addEventListener('scroll',()=>{
   if(chipLock) return;
   const top=$('#chips').getBoundingClientRect().bottom+10;
