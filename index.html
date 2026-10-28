@@ -800,7 +800,7 @@ body.mob .sheet{padding-bottom:calc(20px + env(safe-area-inset-bottom,0px))}
   <button class="tk" data-task="2"><b>2 · Получить заказ</b><span>Экран блокировки с пушем «Заказ готов»</span></button>
   <button class="tk" data-task="3a"><b>3 · Задержка</b><span>Поп-ап «Заказ задерживается», без нового времени</span></button>
   <div class="cap">Быстро переключить статус заказа</div>
-  <div class="stg"><button data-st="confirm">Подтверждаем</button><button data-st="accepted">Принят</button><button data-st="cooking">Готовится</button><button data-st="delayA">Задержка</button><button data-st="ready">Готов</button><button data-st="left2">Осталось 2 мин</button><button data-st="plus5">+5 минут</button></div>
+  <div class="stg"><button data-st="confirm">Подтверждаем</button><button data-st="accepted">Принят</button><button data-st="cooking">Готовится</button><button data-st="delayA">Задержка</button><button data-st="ready">Готов</button><button data-st="left5">Осталось 5 мин</button><button data-st="plus5">+5 минут</button></div>
   <div style="color:var(--grey);font-size:12px;margin-top:6px">При смене статуса пуш приходит сам — если участник включил уведомления.</div>
   <div class="cap">Уведомления <span id="nState" style="text-transform:none;letter-spacing:0;font-weight:600;color:var(--ink)"></span></div>
   <div class="stg"><button data-nt="on">Включить</button><button data-nt="lock">Блокировка</button><button data-nt="again">Повторить пуш</button></div>
@@ -1572,13 +1572,13 @@ setInterval(nPaint,800);
 function jumpState(st){
   if(st==='lock'){mod.classList.remove('on');ensureOrder();showLock();return}
   if(st==='plus5'){S.offset+=5*MIN;tick();log('Модератор: +5 минут');return}
-  if(st==='left2'){ // заказ готов, до конца хранения 2 минуты
+  if(st==='left5'){ // заказ готов, до конца хранения 5 минут — приходит пуш-напоминание «Осталось 5 минут»
     clearTimers(); closeSheet(); unlock(); mod.classList.remove('on'); ensureOrder(); const o=S.order;
     if(o.state!=='ready'&&o.newReadyAt) o.readyAt=o.newReadyAt;
-    const was=o.state; o.state='ready'; o.remSent=1; o.delayShown=0;
-    S.offset+=o.readyAt+13*MIN-now();
-    resetTo(['menu','order']); $('#orderScroll').scrollTop=0; tick(); log('Модератор: до конца хранения 2 минуты');
-    if(was!=='ready') setTimeout(()=>sendPush('ready'),700); return}
+    const was=o.state; o.state='ready'; o.remSent=0; o.delayShown=0;
+    if(was!=='ready') sendPush('ready',0,o.readyAt); // пуш «Заказ готов» — в истории, без баннера
+    S.offset+=o.readyAt+10*MIN-now();
+    resetTo(['menu','order']); $('#orderScroll').scrollTop=0; log('Модератор: до конца хранения 5 минут'); setTimeout(tick,700); return}
   clearTimers(); closeSheet(); unlock(); mod.classList.remove('on'); ensureOrder(); const o=S.order;
   let at;o.firstReady=o.firstReady||o.readyAt;if(['confirm','accepted','cooking'].includes(st)){o.newReadyAt=null;o.readyAt=o.firstReady}
   at={confirm:o.paidAt+5000,accepted:o.paidAt+30000,cooking:o.paidAt+3*MIN,delayA:o.paidAt+5*MIN,delayB:o.paidAt+5*MIN,ready:o.readyAt+300}[st];
