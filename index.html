@@ -1207,6 +1207,10 @@ function setChip(id){$$('.chip').forEach(c=>c.classList.toggle('act',c.dataset.c
 
 function ingIcon(n){
   n=n.toLowerCase(); const im=k=>`<img src="${src('ing-'+k)}" alt="" style="width:56px;height:56px;object-fit:contain">`;
+  if(/соус/.test(n)){ // соусы проверяем раньше сыра: «Соус Сырный» — это соус, а не ломтик сыра
+    if(/сырн/.test(n)) return im('sauce_cheese'); if(/розов/.test(n)) return im('sauce_pink'); if(/барбекю/.test(n)) return im('sauce_bbq');
+    if(/кисло/.test(n)) return im('sauce_sweet'); if(/чеснок/.test(n)) return im('sauce_garlic'); if(/горчич/.test(n)) return im('mustard');
+    return im('sauce_white')}
   if(/кур/.test(n)&&/котлет/.test(n)) return im('cutlet');
   if(/котлет|бифштекс|говядин/.test(n)) return im('beef');
   if(/помидор|томат/.test(n)) return im('tomato');
