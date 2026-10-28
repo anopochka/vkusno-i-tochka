@@ -545,6 +545,12 @@ body.mob .pbar{padding-bottom:calc(12px + env(safe-area-inset-bottom,0px))}
 .mstp button:active{transform:scale(.92)}
 .mstp .q{min-width:22px;text-align:center;font-size:17px;font-weight:700;font-variant-numeric:tabular-nums}
 .mstp .q.tick{animation:tick .25s var(--ease)}
+/* «Тебе скорее всего понравится» — тот же паттерн, что в карточках меню */
+.rc .bot.inq{flex-direction:column;align-items:stretch;gap:6px}
+.rc .bot.inq .pr{font-size:13px;font-weight:400;color:var(--grey-3)}
+.rc .mstp{justify-content:space-between;gap:4px}
+.rc .mstp button{width:32px;height:32px}
+.rc .mstp .q{font-size:15px}
 .pc .pr small{display:block;font-size:12px;font-weight:400;color:var(--grey)}
 .pc .tag.dl{background:var(--green)}
 /* cart extras */
@@ -1131,9 +1137,9 @@ function updateCounts(){
 }
 function paintBtn(e){
   const id=e.dataset.btn, q=qty(id);
-  const pc=e.closest('.pc');
+  const pc=e.closest('.pc,.rc'), isRc=!!e.closest('.rc');
   if(pc){ const bt=e.closest('.bot');
-    if(!q){ if(e.dataset.state!=='add'){bt.classList.remove('inq');e.dataset.state='add';e.innerHTML=`<button class="add" data-prod="${id}" aria-label="Добавить ${P[id].n}">${ICON.plus}</button>`} return }
+    if(!q){ if(e.dataset.state!=='add'){bt.classList.remove('inq');e.dataset.state='add';e.innerHTML=`<button class="add" data-${isRc?'add':'prod'}="${id}" aria-label="Добавить ${P[id].n}">${ICON.plus}</button>`} return }
     if(e.dataset.state!=='stp'){bt.classList.add('inq');e.dataset.state='stp';e.innerHTML=`<span class="mstp"><button data-dec="${id}" aria-label="Меньше">${ICON.minusD}</button><span class="q">${q}</span><button data-inc="${id}" aria-label="Больше">${ICON.plusD}</button></span>`;return}
     const qq=e.querySelector('.q'); if(qq.textContent!==String(q)){qq.textContent=q;qq.classList.remove('tick');void qq.offsetWidth;qq.classList.add('tick')} return }
   if(!q){ const bt=e.closest('.bot'); if(bt) bt.classList.remove('open'); if(e.dataset.state!=='add'){e.dataset.state='add';e.innerHTML=`<button class="add" data-${e.closest('.rc')?'add':'prod'}="${id}" aria-label="Добавить ${P[id].n}">${ICON.plus}</button>`} return }
