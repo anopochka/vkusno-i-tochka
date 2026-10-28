@@ -1415,8 +1415,8 @@ let timers=[];
 function orderTimer(f,ms){timers.push(setTimeout(f,ms))}
 function clearTimers(){timers.forEach(clearTimeout);timers=[]}
 function notifSheet(){
-  openSheet(`<div class="bell">${ICON.bell}</div><h3>Включить уведомления?</h3><p>Статус заказа всегда виден на этом экране. С уведомлениями вы узнаете, что заказ готов, даже если свернёте приложение</p>
-   <button class="cta c" data-act="notifOn">Включить уведомления</button><button class="ghost" data-act="notifLater">Не сейчас</button>`,'',()=>{if(S.notif==='unknown'){S.notif='off';log('Уведомления: шторка закрыта');renderOrder()}});
+  openSheet(`<div class="bell">${ICON.bell}</div><h3>Включить уведомления?</h3><p>Сообщим, когда заказ будет готов, даже если свернёшь приложение.</p>
+   <button class="cta c" data-act="notifOn">Включить</button><button class="ghost" data-act="notifLater">Не сейчас</button>`,'',()=>{if(S.notif==='unknown'){S.notif='off';log('Уведомления: шторка закрыта');renderOrder()}});
   log('Показана шторка уведомлений');
 }
 
