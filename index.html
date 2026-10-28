@@ -88,6 +88,7 @@ body.mob{--sb:calc(env(safe-area-inset-top,0px) + 12px)}
 .ow b{display:block;font-size:18px;font-weight:700;line-height:1.25;text-wrap:balance}
 .ow small{display:block;font-size:15px;color:var(--ink-2);margin-top:6px;line-height:1.3;font-variant-numeric:tabular-nums}
 .ow small.mut{font-size:14px;color:var(--grey-3)}
+.ow small.dl{font-size:14px}
 .ow small em{font-style:normal;font-weight:700}
 .ow .lk{margin-top:auto;padding-top:14px;font-size:15px;color:#1E73BE}
 .ow .r{position:relative}
@@ -1487,7 +1488,7 @@ function owData(){
   const sub={confirm:`<small class="mut">Ждём, когда ресторан примет заказ</small>`,
     accepted:`<small>Будет готов через <em>${mins(o.readyAt)}</em></small>`,
     cooking:`<small>Будет готов через <em>${mins(o.readyAt)}</em></small>`,
-    delayA:o.newReadyAt?`<small>Задерживается, будет готов через <em>${mins(o.newReadyAt)}</em></small>`:S.delayPop?`<small class="mut">Заказ задерживается</small>`:`<small class="mut">Готовим дольше обычного</small>`,
+    delayA:o.newReadyAt?`<small class="dl">Задерживается, будет готов через <em>${mins(o.newReadyAt)}</em></small>`:S.delayPop?`<small class="mut">Заказ задерживается</small>`:`<small class="mut">Готовим дольше обычного</small>`,
     expired:`<small class="mut">Заказ не забрали вовремя</small>`,
     delayB:`<small class="mut">Готовим дольше обычного</small>`,
     ready:`<div class="left">осталось <em>${Math.floor(ls/60)}:${String(ls%60).padStart(2,'0')}</em></div><div class="tr"><i style="width:${(left/(15*MIN)*100).toFixed(1)}%"></i></div>`}[o.state];
