@@ -1244,7 +1244,7 @@ function buildMenu(){
 }
 function renderMenu(){
   const fw=$('#farWrap'); if(fw){const r=R(), act=!!(S.order&&S.order.state!=='done');
-    if(r.km>=1&&!act&&!(S.farClosed||{})[r.id]){ if(fw.dataset.r!==r.id){fw.dataset.r=r.id;fw.innerHTML=`<div class="farpop" role="dialog" aria-label="Ресторан далеко"><div class="fh"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#EE7203" stroke-width="2.2"><path d="M12 21s-7-6.1-7-11.5A7 7 0 0 1 19 9.5C19 14.9 12 21 12 21Z"/><circle cx="12" cy="9.5" r="2.5"/></svg>Ресторан далеко</div><p>Возможно, стоит выбрать ресторан поближе</p><div class="fb"><button class="other" data-act="farOther">Выбрать другой</button><button class="stay" data-act="farClose">Остаться</button></div></div>`;log('Показано предупреждение «далеко»: '+kmS(r.km))}}
+    if(r.km>=1&&!act&&!(S.farClosed||{})[r.id]){ if(fw.dataset.r!==r.id){fw.dataset.r=r.id;fw.innerHTML=`<div class="farpop" role="dialog" aria-label="Ресторан далеко"><div class="fh"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#EE7203" stroke-width="2.2"><path d="M12 21s-7-6.1-7-11.5A7 7 0 0 1 19 9.5C19 14.9 12 21 12 21Z"/><circle cx="12" cy="9.5" r="2.5"/></svg>Найдём поближе?</div><p>Это предприятие далеко от тебя.</p><div class="fb"><button class="other" data-act="farOther">Выбрать другое</button><button class="stay" data-act="farClose">Не менять</button></div></div>`;log('Показано предупреждение «далеко»: '+kmS(r.km))}}
     else {fw.innerHTML='';fw.dataset.r=''}}
   const r=R(); $('#mAddr').textContent='Санкт-Петербург, '+r.short; $('#mHrs').textContent=r.hrs; $('#mKm').textContent=kmS(r.km);
   paintOW();
