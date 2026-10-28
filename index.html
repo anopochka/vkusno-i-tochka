@@ -436,15 +436,15 @@ body.mob .hcart{bottom:calc(76px + env(safe-area-inset-bottom,0px))}
 .hcart i{width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,.22);display:grid;place-items:center}
 
 #farWrap{position:relative;height:0;z-index:4}
-.farpop{position:absolute;top:-92px;right:4px;width:282px;background:var(--white);border-radius:18px;padding:14px 14px 12px;box-shadow:0 10px 30px rgba(0,0,0,.16),0 1px 3px rgba(0,0,0,.08);transform-origin:85% 0;animation:farIn .45s var(--ease) both .4s}
+.farpop{position:absolute;top:-92px;right:4px;width:auto;max-width:calc(100% - 8px);background:var(--white);border-radius:18px;padding:14px 14px 12px;box-shadow:0 10px 30px rgba(0,0,0,.16),0 1px 3px rgba(0,0,0,.08);transform-origin:85% 0;animation:farIn .45s var(--ease) both .4s}
 .farpop::before{content:"";position:absolute;top:-6px;right:44px;width:14px;height:14px;background:var(--white);transform:rotate(45deg);border-radius:3px;box-shadow:-2px -2px 3px rgba(0,0,0,.04)}
 .farpop .fh{display:flex;gap:8px;align-items:center;font-size:15px;font-weight:600;color:var(--ink)}
 .farpop .fh svg{flex:none}
 .farpop p{margin:6px 0 12px;font-size:13px;line-height:1.4;color:var(--grey)}
-.farpop .fb{display:grid;grid-template-columns:auto auto;justify-content:start;gap:8px}
+.farpop .fb{display:flex;gap:8px}
 .farpop .fb button{height:38px;border-radius:19px;font-size:14px;white-space:nowrap}
-.farpop .other{padding:0 20px}
-.farpop .stay{padding:0 14px}
+.farpop .other{padding:0 18px}
+.farpop .stay{padding:0 18px}
 .farpop .stay{background:#F2F2F2;color:var(--ink)}
 .farpop .other{background:var(--orange);color:var(--white)}
 .farpop.out{animation:farOut .25s ease both}
@@ -740,20 +740,22 @@ body.mob .sheet{padding-bottom:calc(20px + env(safe-area-inset-bottom,0px))}
 .runsvg .rdrop{animation:rdrop 1.2s ease-in infinite}
 .runsvg .rshadow{transform-origin:50% 50%;animation:rsh .17s ease-in-out infinite alternate}
 .runsvg .xtra{display:none}
-/* большая задержка: маскот бежит быстрее, сильнее потеет и краснеет */
+/* большая задержка: маскот бежит чуть быстрее и потеет — без резкости */
 .big .runsvg .xtra{display:inline}
-.big .runsvg .rbody,.big .runsvg .rshadow{animation-duration:.1s}
-.big .runsvg .rlf,.big .runsvg .rlb,.big .runsvg .rarmb,.big .runsvg .rarm,.big .runsvg .rmouth{animation-duration:.2s}
-.big .runsvg .rlines path,.big .runsvg .rdust circle{animation-duration:.38s}
-.big .runsvg .rdrop{animation-duration:.75s}
-.big .runsvg .d2{animation-delay:-.25s}.big .runsvg .d3{animation-delay:-.5s}.big .runsvg .d4{animation-delay:-.1s}
-.big .runsvg circle[fill="#F09A7E"]{fill:#F0645A;opacity:.85}
-.an-cook.big #bag{animation-duration:.55s}
-.an-delay.big #bag,.an-delay.big #pupils,.an-delay.big #mouth{animation-duration:1.3s}
-.an-cook.big .steam{animation-duration:1.1s}
-.an-cook.big .it{animation-duration:2.6s}
-.an-cook .bdrop{display:none}.an-cook.big .bdrop{display:inline;animation:rdrop .9s ease-in infinite}
-.an-cook.big g:nth-last-of-type(2)>.bdrop{animation-delay:-.3s}.an-cook.big g:last-of-type>.bdrop{animation-delay:-.6s}
+.big .runsvg .xtra .rlines{display:none}
+.big .runsvg .d2,.big .runsvg .d4{display:none}
+.big .runsvg .rbody,.big .runsvg .rshadow{animation-duration:.14s}
+.big .runsvg .rlf,.big .runsvg .rlb,.big .runsvg .rarmb,.big .runsvg .rarm,.big .runsvg .rmouth{animation-duration:.28s}
+.big .runsvg .rlines path,.big .runsvg .rdust circle{animation-duration:.54s}
+.big .runsvg .rdrop{animation-duration:1.1s}
+.big .runsvg .d3{animation-delay:-.55s}
+.big .runsvg circle[fill="#F09A7E"]{opacity:.7}
+.an-cook.big #bag{animation-duration:.9s}
+.an-cook.big .steam{animation-duration:1.8s}
+.an-cook.big .it{animation-duration:3.8s}
+.an-delay.big #bag,.an-delay.big #pupils,.an-delay.big #mouth{animation-duration:2s}
+.an-cook .bdrop{display:none}.an-cook.big .bdrop{display:inline;animation:rdrop 1.6s ease-in infinite;opacity:.8}
+.an-cook.big g:nth-last-of-type(2)>.bdrop{animation-delay:-.8s}.an-cook.big g:last-of-type>.bdrop{display:none}
 
 @keyframes rbob{from{transform:translateY(6px)}to{transform:translateY(0)}}
 @keyframes rleg{from{transform:rotate(-40deg)}to{transform:rotate(40deg)}}
@@ -1244,7 +1246,7 @@ function buildMenu(){
 }
 function renderMenu(){
   const fw=$('#farWrap'); if(fw){const r=R(), act=!!(S.order&&S.order.state!=='done');
-    if(r.km>=1&&!act&&!(S.farClosed||{})[r.id]){ if(fw.dataset.r!==r.id){fw.dataset.r=r.id;fw.innerHTML=`<div class="farpop" role="dialog" aria-label="Ресторан далеко"><div class="fh"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#EE7203" stroke-width="2.2"><path d="M12 21s-7-6.1-7-11.5A7 7 0 0 1 19 9.5C19 14.9 12 21 12 21Z"/><circle cx="12" cy="9.5" r="2.5"/></svg>Найдём поближе?</div><p>Это предприятие далеко от тебя.</p><div class="fb"><button class="other" data-act="farOther">Выбрать другое</button><button class="stay" data-act="farClose">Не менять</button></div></div>`;log('Показано предупреждение «далеко»: '+kmS(r.km))}}
+    if(r.km>=1&&!act&&!(S.farClosed||{})[r.id]){ if(fw.dataset.r!==r.id){fw.dataset.r=r.id;fw.innerHTML=`<div class="farpop" role="dialog" aria-label="Ресторан далеко"><div class="fh"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#EE7203" stroke-width="2.2"><path d="M12 21s-7-6.1-7-11.5A7 7 0 0 1 19 9.5C19 14.9 12 21 12 21Z"/><circle cx="12" cy="9.5" r="2.5"/></svg>Найдём поближе?</div><p>Это предприятие далеко от тебя.</p><div class="fb"><button class="other" data-act="farOther">Выбрать другое</button><button class="stay" data-act="farClose">Остаться</button></div></div>`;log('Показано предупреждение «далеко»: '+kmS(r.km))}}
     else {fw.innerHTML='';fw.dataset.r=''}}
   const r=R(); $('#mAddr').textContent='Санкт-Петербург, '+r.short; $('#mHrs').textContent=r.hrs; $('#mKm').textContent=kmS(r.km);
   paintOW();
