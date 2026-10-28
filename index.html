@@ -267,6 +267,8 @@ body.mob .paybar{padding-bottom:calc(14px + env(safe-area-inset-bottom,0px))}
 .sc .ill{width:322px;max-width:100%;margin:8px 0 4px}
 .sc .ill svg{width:100%;height:auto;display:block;overflow:visible}
 .ill svg *{transform-box:fill-box}
+.ill.exp svg *{transform-box:view-box;transform-origin:0 0} /* перекати-поле анимируется через SMIL — нужны обычные координаты */
+.ill.exp #bubbleG{transform-box:fill-box;transform-origin:0% 100%}
 .ill #bag{transform-origin:50% 100%}
 .ill #eyes{transform-origin:50% 50%;animation:blink 4.2s infinite}
 @keyframes blink{0%,46%,50%,100%{transform:scaleY(1)}48%{transform:scaleY(.1)}}
@@ -623,6 +625,12 @@ body.mob .sheet{padding-bottom:calc(20px + env(safe-area-inset-bottom,0px))}
 .rd.gone .num{color:#C4C4C4}.rd.gone .till{color:var(--grey)}
 .rd .left b.zero{color:var(--red)}.bar i.late{background:var(--red)}
 .acts{display:flex;flex-direction:column;gap:8px}
+.sc{position:relative}
+.cweb{position:absolute;top:0;pointer-events:none;animation:webSway 5s ease-in-out infinite}
+.cweb.l{left:0;transform-origin:0 0}
+.cweb.r{right:0;transform:scaleX(-1);transform-origin:50% 0;animation-name:webSwayR;animation-delay:-2s}
+@keyframes webSwayR{0%,100%{transform:scaleX(-1) rotate(0)}50%{transform:scaleX(-1) rotate(1deg)}}
+.cweb.l{transform-origin:0 0}
 .acts .ghost{height:44px;border-radius:22px;background:var(--line);color:var(--ink);margin:0}
 /* почта: ошибка */
 .field.err{box-shadow:inset 0 0 0 1.5px var(--red)}
@@ -891,20 +899,6 @@ body.mob .sheet{padding-bottom:calc(20px + env(safe-area-inset-bottom,0px))}
 (()=>{
 const ILL={
 expired:`<svg viewBox="0 0 346 188" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Пустой серый прилавок, по нему катится перекати-поле">
- <g transform="scale(1.3)"><g class="web w1" stroke="#C4C4C4" stroke-width=".9" stroke-linecap="round">
-  <path d="M0 0L56 0M0 0L0 56M0 0L48 26M0 0L26 48M0 0L40 40"/>
-  <path d="M14 0Q12 6 12 7Q8 9 7 12Q4 12 0 14"/>
-  <path d="M28 0Q24 10 24 13Q18 18 13 24Q8 23 0 28"/>
-  <path d="M42 0Q36 13 36 20Q28 27 20 36Q12 35 0 42"/>
- </g>
- </g>
- <g transform="translate(346 0) scale(1.3) translate(-346 0)"><g class="web w2" stroke="#C8C8C8" stroke-width=".9" stroke-linecap="round">
-  <path d="M346 0L302 0M346 0L346 46M346 0L308 22M346 0L324 38"/>
-  <path d="M334 0Q336 5 335 7Q339 8 340 10Q343 10 346 12"/>
-  <path d="M320 0Q323 9 322 13Q328 16 332 21Q338 22 346 26"/>
-  <path d="M306 0Q311 13 310 19Q318 24 324 32Q334 33 346 40"/>
-  <path d="M330 40V54" stroke="#DDDDDD"/><circle cx="330" cy="55.5" r="1.6" fill="#BDBDBD" stroke="none"/>
- </g></g>
  <g transform="translate(0 -26)"><g id="bubbleG">
   <path d="M206 92L242 82.5V99.5L206 92Z" fill="#CFCFCF"/>
   <circle cx="254" cy="90" r="30" fill="#CFCFCF"/>
@@ -919,17 +913,43 @@ expired:`<svg viewBox="0 0 346 188" fill="none" xmlns="http://www.w3.org/2000/sv
   <path d="M38 162.7L38 178M38 162.7L52 162.7M38 162.7L50 174M38 168Q42 168 44 162.7M38 173Q46 172 48 162.7"/>
   <path d="M308 162.7L308 176M308 162.7L296 162.7M308 162.7L298 172M308 168Q304 168 302 162.7"/>
  </g>
- <g class="tw-move">
-  <ellipse class="tw-shadow" cx="314" cy="153" rx="17" ry="2.6" fill="#000"/>
-  <g class="dust" fill="#DCDCDC"><circle cx="330" cy="150" r="2.4"/><circle cx="336" cy="147" r="1.8"/></g>
-  <g class="tw-hop"><g transform="translate(314 135)"><g class="tw-spin"><g transform="scale(1.15) translate(-314 -137)">
-   <g stroke="#B9976A" stroke-width="1.6" stroke-linecap="round" fill="none">
-    <path d="M300 131Q310 120 324 128Q332 138 322 148Q310 154 302 145Q296 138 303 132"/>
-    <path d="M306 125Q320 122 327 134Q328 146 316 151Q303 150 300 139"/>
-    <path d="M299 137Q302 125 314 122Q326 124 329 136"/>
-    <path d="M304 149Q314 141 326 144M302 128Q312 134 318 150"/>
-   </g>
-  </g></g></g></g>
+ <g opacity="0">
+  <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;.08;.88;1" dur="9s" repeatCount="indefinite"/>
+  <animateTransform attributeName="transform" type="translate" values="0 0;-250 0" dur="9s" repeatCount="indefinite"/>
+  <ellipse cx="300" cy="153.95" rx="14" ry="2.2" fill="#000" opacity=".14">
+   <animate attributeName="rx" values="14;9;14" keyTimes="0;.45;1" calcMode="spline" keySplines=".3 0 .7 1;.3 0 .7 1" dur="1s" repeatCount="indefinite"/>
+   <animate attributeName="opacity" values=".14;.06;.14" keyTimes="0;.45;1" calcMode="spline" keySplines=".3 0 .7 1;.3 0 .7 1" dur="1s" repeatCount="indefinite"/>
+  </ellipse>
+  <g fill="#D6D6D6">
+   <circle cx="317" cy="151.35" r="2"><animate attributeName="opacity" values="0;.9;0" dur="1s" repeatCount="indefinite"/><animate attributeName="cx" values="315;324" dur="1s" repeatCount="indefinite"/></circle>
+   <circle cx="321" cy="148.35" r="1.5"><animate attributeName="opacity" values="0;.7;0" dur="1s" begin=".25s" repeatCount="indefinite"/><animate attributeName="cx" values="318;328" dur="1s" begin=".25s" repeatCount="indefinite"/></circle>
+  </g>
+  <g>
+   <animateTransform attributeName="transform" type="translate" values="0 0;0 -7;0 0" keyTimes="0;.45;1" calcMode="spline" keySplines=".3 0 .7 1;.3 0 .7 1" dur="1s" repeatCount="indefinite"/>
+   <g transform="translate(300 137.85)"><g stroke-linecap="round" fill="none">
+    <animateTransform attributeName="transform" type="rotate" values="0;-360" dur="3s" repeatCount="indefinite"/>
+<path d="M-7.8 8.9 L-8.2 7.2 L-8.3 5.2 L-8.0 3.0 L-7.4 0.7 L-6.5 -1.6 L-5.4 -3.9 L-4.1 -6.0 L-2.6 -7.9 L-0.9 -9.5 L0.7 -10.6 L2.3 -11.4 L3.8 -11.7 L5.2 -11.6 L6.4 -11.0 L7.3 -10.0 L7.9 -8.5 L8.2 -6.8 L8.2 -4.8 L7.9 -2.5 L7.3 -0.2 L6.3 2.1 L5.1 4.4 L3.8 6.4 L2.2 8.2" stroke="#C4A274" stroke-width="1.5"/>
+<path d="M-11.3 2.7 L-11.7 1.1 L-11.9 -0.5 L-11.7 -2.2 L-11.2 -3.7 L-10.4 -5.2 L-9.3 -6.5 L-8.0 -7.6 L-6.4 -8.5 L-4.7 -9.2 L-2.8 -9.7 L-0.9 -9.8 L1.1 -9.8 L3.0 -9.4 L4.8 -8.8 L6.6 -8.0 L8.1 -6.9 L9.4 -5.6 L10.5 -4.2 L11.2 -2.7 L11.7 -1.1 L11.9 0.5 L11.7 2.1 L11.2 3.7 L10.4 5.1" stroke="#B48E5E" stroke-width="1.5"/>
+<path d="M-2.7 12.4 L-5.3 11.5 L-7.6 10.2 L-9.6 8.4 L-11.2 6.3 L-12.3 3.9 L-12.9 1.3 L-13.0 -1.3 L-12.5 -3.8 L-11.5 -6.2 L-10.0 -8.4 L-8.1 -10.2 L-5.8 -11.5 L-3.3 -12.4 L-0.7 -12.7 L2.0 -12.6 L4.6 -11.8 L7.0 -10.6 L9.1 -9.0 L10.8 -6.9 L12.1 -4.6 L12.8 -2.1 L13.0 0.6 L12.7 3.1 L11.8 5.6" stroke="#B48E5E" stroke-width="1.5"/>
+<path d="M-8.5 -9.7 L-7.2 -9.7 L-5.7 -9.5 L-4.0 -9.0 L-2.2 -8.2 L-0.3 -7.2 L1.5 -6.0 L3.4 -4.6 L5.1 -3.1 L6.7 -1.5 L8.1 0.2 L9.3 1.8 L10.2 3.4 L10.8 4.9 L11.1 6.3 L11.0 7.4 L10.7 8.4 L10.1 9.1 L9.1 9.6 L7.9 9.8 L6.5 9.7 L4.9 9.3 L3.2 8.6 L1.3 7.8 L-0.6 6.6" stroke="#C4A274" stroke-width="1.1"/>
+<path d="M10.3 -3.7 L10.5 -1.5 L10.4 0.7 L10.0 2.9 L9.3 5.1 L8.3 7.1 L7.2 8.9 L5.8 10.4 L4.2 11.7 L2.6 12.6 L0.8 13.2 L-0.9 13.4 L-2.7 13.2 L-4.3 12.7 L-5.9 11.8 L-7.2 10.6 L-8.4 9.1 L-9.3 7.3 L-10.0 5.3 L-10.4 3.2 L-10.5 1.0 L-10.3 -1.3 L-9.8 -3.5 L-9.1 -5.6 L-8.1 -7.5" stroke="#A57E4F" stroke-width="1.5"/>
+<path d="M8.9 -7.4 L9.0 -5.8 L8.7 -3.9 L8.1 -1.8 L7.1 0.3 L5.8 2.4 L4.3 4.4 L2.6 6.2 L0.8 7.8 L-1.0 9.0 L-2.8 9.9 L-4.5 10.3 L-6.0 10.4 L-7.2 9.9 L-8.2 9.1 L-8.8 7.9 L-9.0 6.3 L-8.9 4.5 L-8.3 2.5 L-7.5 0.4 L-6.3 -1.7 L-4.8 -3.8 L-3.2 -5.7 L-1.4 -7.3 L0.4 -8.7" stroke="#C4A274" stroke-width="1.5"/>
+<path d="M6.9 11.2 L4.9 12.4 L2.8 13.2 L0.5 13.4 L-1.8 13.3 L-4.0 12.6 L-6.1 11.5 L-7.9 10.1 L-9.5 8.2 L-10.8 6.1 L-11.7 3.8 L-12.2 1.4 L-12.2 -1.1 L-11.9 -3.6 L-11.1 -5.9 L-10.0 -8.1 L-8.5 -9.9 L-6.7 -11.4 L-4.6 -12.5 L-2.5 -13.2 L-0.2 -13.4 L2.1 -13.2 L4.3 -12.5 L6.3 -11.4 L8.2 -9.8" stroke="#B48E5E" stroke-width="1.1"/>
+<path d="M4.3 -13.2 L5.7 -12.0 L6.8 -10.2 L7.5 -7.9 L7.9 -5.2 L7.9 -2.3 L7.5 0.8 L6.7 3.8 L5.5 6.6 L4.1 9.1 L2.5 11.2 L0.8 12.7 L-1.0 13.5 L-2.7 13.7 L-4.3 13.2 L-5.7 12.1 L-6.7 10.3 L-7.5 8.1 L-7.9 5.4 L-7.9 2.4 L-7.5 -0.6 L-6.7 -3.6 L-5.6 -6.5 L-4.2 -9.0 L-2.6 -11.1" stroke="#A57E4F" stroke-width="1.3"/>
+<path d="M-12.8 2.5 L-12.8 -0.5 L-12.2 -3.5 L-11.0 -6.3 L-9.4 -8.8 L-7.3 -10.9 L-4.8 -12.5 L-2.2 -13.5 L0.6 -13.9 L3.3 -13.7 L5.9 -12.8 L8.2 -11.3 L10.1 -9.4 L11.6 -7.0 L12.5 -4.2 L12.8 -1.3 L12.6 1.7 L11.8 4.6 L10.4 7.3 L8.6 9.6 L6.4 11.5 L3.8 12.9 L1.1 13.7 L-1.6 13.9 L-4.3 13.4" stroke="#B48E5E" stroke-width="1.3"/>
+<path d="M-10.7 -7.8 L-8.8 -10.1 L-6.4 -11.9 L-3.8 -13.1 L-1.0 -13.8 L1.8 -13.8 L4.6 -13.1 L7.1 -11.8 L9.3 -10.0 L11.1 -7.7 L12.4 -5.1 L13.0 -2.1 L13.1 0.9 L12.5 3.8 L11.4 6.6 L9.7 9.1 L7.5 11.1 L5.0 12.6 L2.3 13.6 L-0.5 13.9 L-3.4 13.5 L-6.0 12.5 L-8.4 10.9 L-10.4 8.8 L-11.9 6.3" stroke="#C4A274" stroke-width="1.3"/>
+<path d="M0.6 -13.8 L2.9 -13.7 L5.1 -12.9 L7.1 -11.6 L8.7 -9.6 L9.9 -7.2 L10.6 -4.4 L10.8 -1.5 L10.5 1.6 L9.7 4.5 L8.4 7.3 L6.6 9.7 L4.6 11.6 L2.3 13.0 L-0.1 13.7 L-2.4 13.8 L-4.7 13.1 L-6.7 11.9 L-8.4 10.1 L-9.7 7.7 L-10.5 5.0 L-10.8 2.1 L-10.6 -0.9 L-9.9 -3.9 L-8.7 -6.7" stroke="#C4A274" stroke-width="1.3"/>
+<path d="M12.7 0.9 L15.0 3.3" stroke="#A57E4F" stroke-width="1"/>
+<path d="M9.1 9.0 L9.4 12.6" stroke="#A57E4F" stroke-width="1"/>
+<path d="M1.9 12.6 L-0.0 16.3" stroke="#A57E4F" stroke-width="1"/>
+<path d="M-6.2 11.2 L-10.0 13.0" stroke="#A57E4F" stroke-width="1"/>
+<path d="M-12.5 2.7 L-15.8 1.0" stroke="#A57E4F" stroke-width="1"/>
+<path d="M-11.2 -6.1 L-12.6 -9.6" stroke="#A57E4F" stroke-width="1"/>
+<path d="M-5.9 -11.3 L-5.3 -15.1" stroke="#A57E4F" stroke-width="1"/>
+<path d="M1.0 -12.7 L3.5 -15.3" stroke="#A57E4F" stroke-width="1"/>
+<path d="M10.4 -7.4 L14.2 -7.1" stroke="#A57E4F" stroke-width="1"/>
+   </g></g>
+  </g>
  </g>
 </svg>`,
 paid:`<svg viewBox="0 0 277 150" fill="none" xmlns="http://www.w3.org/2000/svg"><g id="counter"><rect x="71.07" y="122.68" width="134.65" height="7.48" rx="2.24" fill="#EE7203"/><rect x="78.55" y="130.16" width="119.69" height="16.45" rx="2.24" fill="#2F5A40"/></g><g id="bag"><g id="paper"><rect x="125.68" y="25.43" width="25.43" height="34.41" rx="1.49" fill="white" stroke="#E2E2E2" stroke-width="0.74"/><path d="M130.17 32.91H146.62M130.17 38.89H146.62M130.17 44.88H140.64" stroke="#EE7203" stroke-width="2.24" stroke-linecap="round"/></g><rect x="112.21" y="58.34" width="52.36" height="64.33" rx="2.99" fill="#C99A68"/><rect x="112.21" y="115.20" width="52.36" height="7.48" rx="1.49" fill="#A9794A"/><path d="M112.21 58.34H164.58L160.09 65.82H116.70L112.21 58.34Z" fill="#8C6238"/><path d="M133.16 97.25C136.65 100.74 140.14 100.74 143.63 97.25" stroke="#3A2412" stroke-width="2.24" stroke-linecap="round"/><circle opacity="0.55" cx="121.19" cy="95.75" r="3.74" fill="#F09A7E"/><circle opacity="0.55" cx="155.60" cy="95.75" r="3.74" fill="#F09A7E"/><g id="eyes"><circle cx="128.67" cy="88.27" r="2.99" fill="#3A2412"/><circle cx="148.12" cy="88.27" r="2.99" fill="#3A2412"/></g></g><g class="spark"><path d="M88.27 47.12C88.27 50.61 90.02 52.36 93.51 52.36C90.02 52.36 88.27 54.11 88.27 57.60C88.27 54.11 86.53 52.36 83.04 52.36C86.53 52.36 88.27 50.61 88.27 47.12Z" fill="#F5B400"/></g><g class="spark"><path d="M201.98 84.53C201.98 87.02 203.23 88.27 205.72 88.27C203.23 88.27 201.98 89.51 201.98 92.01C201.98 89.51 200.74 88.27 198.24 88.27C200.74 88.27 201.98 87.02 201.98 84.53Z" fill="#EE7203"/></g><g id="bubble"><g transform="translate(205.60 50.56) scale(1.1) translate(-169.60 -52.56)"><path d="M169.60 52.56L198.49 44.85V58.34L169.60 52.56Z" fill="#EE7203"/><circle cx="208.12" cy="51.6" r="26" fill="#EE7203"/><text x="208.2" y="45.3" text-anchor="middle" fill="#fff" font-family="Onest,Arial" font-weight="700" font-size="6.74">Заказ</text><text x="208.5" y="60.7" text-anchor="middle" fill="#fff" font-family="Onest,Arial" font-weight="800" font-size="16.37">M13</text></g></g></svg>`,
@@ -1412,7 +1432,7 @@ function renderOrder(swap){
     <div class="rd"><div class="l">Назовите номер на выдаче</div><div class="row"><span class="num">M13</span><span class="left"><b id="left">15:00</b></span></div>
     <div class="bar"><i id="leftBar" style="width:100%"></i></div><div class="till">Заберите до ${hm(o.readyAt+15*MIN)}</div>
     <div class="w">${ICON.info.replace('#C9C9C9','#9A9A9A')}<span>К сожалению, мы не сможем хранить заказ дольше 15 минут и будем вынуждены его утилизировать, деньги за него не вернутся</span></div></div>`;
-  if(st==='expired') inner=`<h2>Время вышло</h2><div class="ill exp">${ILL.expired}</div>
+  if(st==='expired') inner=`<svg class="cweb l" width="58" height="58" viewBox="0 0 58 58" fill="none" stroke="#CDCDCD" stroke-width=".9" stroke-linecap="round" aria-hidden="true"><path d="M0 0L58 0M0 0L0 58M0 0L52 26M0 0L26 52M0 0L42 42"/><path d="M13 0Q11 5 11 6Q7 8 6 11Q3 11 0 13"/><path d="M27 0Q23 9 23 12Q17 17 12 23Q7 23 0 27"/><path d="M42 0Q36 13 36 19Q28 26 19 36Q12 36 0 42"/></svg><svg class="cweb r" width="58" height="58" viewBox="0 0 58 58" fill="none" stroke="#CDCDCD" stroke-width=".9" stroke-linecap="round" aria-hidden="true"><path d="M0 0L58 0M0 0L0 58M0 0L52 26M0 0L26 52M0 0L42 42"/><path d="M13 0Q11 5 11 6Q7 8 6 11Q3 11 0 13"/><path d="M27 0Q23 9 23 12Q17 17 12 23Q7 23 0 27"/><path d="M42 0Q36 13 36 19Q28 26 19 36Q12 36 0 42"/></svg><h2>Время вышло</h2><div class="ill exp">${ILL.expired}</div>
     <div class="rd gone"><div class="l">Назовите номер на выдаче</div><div class="row"><span class="num">M13</span><span class="left"><b class="zero">0:00</b></span></div>
     <div class="bar"><i class="late" style="width:0"></i></div><div class="till">Заберите до ${hm(o.readyAt+15*MIN)}</div>
     <div class="w">${ICON.info.replace('#C9C9C9','#9A9A9A')}<span>К сожалению, мы не сможем хранить заказ дольше 15 минут и будем вынуждены его утилизировать, деньги за него не вернутся</span></div></div>`;
