@@ -334,6 +334,11 @@ body.mob .paybar{padding-bottom:calc(14px + env(safe-area-inset-bottom,0px))}
 .rd .left b{display:block;font-size:24px;font-weight:800;color:var(--ink);font-variant-numeric:tabular-nums}
 .bar{height:6px;border-radius:3px;background:#E2E2DC;margin:12px 0;overflow:hidden}
 .bar i{display:block;height:100%;background:var(--orange);border-radius:3px;transition:width 1s linear}
+/* последние 2 минуты хранения — таймер и полоска краснеют */
+#left,.ow .left{transition:color .4s}
+#leftBar,.ow .tr i{transition:width 1s linear,background-color .4s}
+body.urgent #left,body.urgent .ow .left{color:var(--red)}
+body.urgent #leftBar,body.urgent .ow .tr i{background:var(--red)}
 .rd .till{font-size:14px}
 .rd .w{display:flex;gap:8px;font-size:13px;color:var(--grey);line-height:1.4;margin-top:10px}
 .info{display:flex;gap:8px;font-size:13px;color:var(--grey);line-height:1.4;padding:0 2px}
@@ -885,6 +890,9 @@ let isMob=false, scale=1;
 
 /* ---------- utils ---------- */
 const now=()=>Date.now()+S.offset;
+/* Часы прототипа = реальные часы телефона. Чтобы «перемотать» заказ, сдвигаем в прошлое время заказа,
+   а не переводим часы — тогда «Заберите до», «Готов в …» и время на экране совпадают с часами респондента. */
+function warp(d){const o=S.order;if(!o||!d)return;['paidAt','readyAt','firstReady','newReadyAt'].forEach(k=>{if(o[k])o[k]-=d});(o.pushes||[]).forEach(p=>p.at-=d)}
 const hm=t=>{const d=new Date(t);return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0')};
 const rub=n=>n.toLocaleString('ru-RU')+' руб.';
 const pl=(n,f)=>{const a=n%10,b=n%100;return f[(a===1&&b!==11)?0:(a>=2&&a<=4&&(b<10||b>=20))?1:2]};
@@ -1307,10 +1315,12 @@ function tick(){
   paintOW();
   const c=$('#clock'); if(c) c.textContent=hm(now());
   const o=S.order, l=$('#left');
+  document.body.classList.toggle('urgent',!!(o&&o.state==='ready'&&o.readyAt+15*MIN-now()<=2*MIN));
   if(o&&o.state==='ready'&&l){
     const rem=Math.max(0,o.readyAt+15*MIN-now()), s=Math.ceil(rem/1000);
     l.textContent=`${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}`;
     $('#leftBar').style.width=(rem/(15*MIN)*100)+'%';
+    const tl=document.querySelector('.rd .till'); if(tl) tl.textContent='Заберите до '+hm(o.readyAt+15*MIN);
   }
   const lt=$('#lockTime'); if(lt){lt.textContent=hm(now()); const L=$('#lock'); if(!L.hidden&&+L.dataset.n!==pushList().length) paintLock(); else if(!L.hidden) $$('#nlist .ntf b small').forEach((sm,i)=>{const ps=pushList(); const p=lockOpen?ps[i]:ps[i]; if(p) sm.textContent=ago(p.at)})}
 }
@@ -1390,8 +1400,8 @@ function task(k){
     $$('.owWrap').forEach(w=>{w.innerHTML='';w.dataset.st=''});
     buildMenu(); resetTo(['home']); renderList(); ms.scrollTop=0; setChip('new'); $$('.scroll').forEach(x=>x.scrollTop=0);
     $('#farWrap').innerHTML='';$('#farWrap').dataset.r='';$('#log').textContent=''; log('— Задание 1: заказать по пути (полный сброс) —')}
-  if(k==='2'){ensureOrder();const o=S.order;if(o.newReadyAt)o.readyAt=o.newReadyAt;S.offset+=o.readyAt+300-now();o.state='ready';S.notif='on';o.pushes=[];o.remSent=0;sendPush('accepted',1,o.paidAt+3200);sendPush('cooking',1,o.paidAt+30000);sendPush('ready',1,o.readyAt);resetTo(['menu','order']);setTimeout(showLock,50);log('— Задание 2: получить заказ —')}
-  if(k==='3a'||k==='3b'){ensureOrder();const o=S.order;S.offset+=o.paidAt+5*MIN-now();o.newReadyAt=o.readyAt+8*MIN;o.delayShown=0;o.state='delayA';resetTo(['menu','order']);$('#orderScroll').scrollTop=0;setTimeout(()=>sendPush('delayA'),900);log(`— Задание ${k==='3a'?'3А':'3Б'}: задержка —`)}
+  if(k==='2'){ensureOrder();const o=S.order;if(o.newReadyAt)o.readyAt=o.newReadyAt;warp(o.readyAt+300-now());o.state='ready';S.notif='on';o.pushes=[];o.remSent=0;sendPush('accepted',1,o.paidAt+3200);sendPush('cooking',1,o.paidAt+30000);sendPush('ready',1,o.readyAt);resetTo(['menu','order']);setTimeout(showLock,50);log('— Задание 2: получить заказ —')}
+  if(k==='3a'||k==='3b'){ensureOrder();const o=S.order;warp(o.paidAt+5*MIN-now());o.newReadyAt=o.readyAt+8*MIN;o.delayShown=0;o.state='delayA';resetTo(['menu','order']);$('#orderScroll').scrollTop=0;setTimeout(()=>sendPush('delayA'),900);log(`— Задание ${k==='3a'?'3А':'3Б'}: задержка —`)}
   tick();
 }
 
@@ -1571,13 +1581,13 @@ function nPaint(){const e=$('#nState');if(e)e.textContent='· '+({on:'включ
 setInterval(nPaint,800);
 function jumpState(st){
   if(st==='lock'){mod.classList.remove('on');ensureOrder();showLock();return}
-  if(st==='plus5'){S.offset+=5*MIN;tick();log('Модератор: +5 минут');return}
+  if(st==='plus5'){warp(5*MIN);if(S.order&&S.stack.at(-1)==='order')renderOrder();tick();log('Модератор: +5 минут');return}
   if(st==='left5'){ // заказ готов, до конца хранения 5 минут — приходит пуш-напоминание «Осталось 5 минут»
     clearTimers(); closeSheet(); unlock(); mod.classList.remove('on'); ensureOrder(); const o=S.order;
     if(o.state!=='ready'&&o.newReadyAt) o.readyAt=o.newReadyAt;
     const was=o.state; o.state='ready'; o.remSent=0; o.delayShown=0;
     if(was!=='ready') sendPush('ready',0,o.readyAt); // пуш «Заказ готов» — в истории, без баннера
-    S.offset+=o.readyAt+10*MIN-now();
+    warp(o.readyAt+10*MIN-now());
     resetTo(['menu','order']); $('#orderScroll').scrollTop=0; log('Модератор: до конца хранения 5 минут'); setTimeout(tick,700); return}
   clearTimers(); closeSheet(); unlock(); mod.classList.remove('on'); ensureOrder(); const o=S.order;
   let at;o.firstReady=o.firstReady||o.readyAt;if(['confirm','accepted','cooking'].includes(st)){o.newReadyAt=null;o.readyAt=o.firstReady}
@@ -1585,7 +1595,7 @@ function jumpState(st){
   o.firstReady=o.firstReady||o.readyAt;
   if(['confirm','accepted','cooking'].includes(st)){o.newReadyAt=null;o.readyAt=o.firstReady}
   if(st==='ready'&&o.newReadyAt){o.readyAt=o.newReadyAt;at=o.readyAt+300}
-  S.offset+=at-now(); if((st==='delayA'||st==='delayB')&&!o.newReadyAt) o.newReadyAt=o.readyAt+8*MIN;
+  warp(at-now()); if((st==='delayA'||st==='delayB')&&!o.newReadyAt) o.newReadyAt=o.readyAt+8*MIN;
   if(st==='delayA'||st==='delayB') o.noForecast=st==='delayB';
   const ch=o.state!==st; if(ch) o.delayShown=0; o.state=st; if(st!=='ready') o.remSent=0; resetTo(['menu','order']); $('#orderScroll').scrollTop=0; tick(); log('Модератор: статус → '+STN[st]); if(ch&&st!=='confirm') setTimeout(()=>sendPush(st),700);
 }
