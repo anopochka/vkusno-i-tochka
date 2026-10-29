@@ -1841,41 +1841,74 @@ document.addEventListener('keydown',e=>{if(e.target.tagName==='INPUT')return;if(
 let taps=[];
 $('#hot').addEventListener('pointerdown',()=>{const t=Date.now();taps=taps.filter(x=>t-x<900);taps.push(t);if(taps.length>=3){taps=[];toggleMod()}});
 
-/* ---------- remote control (moderator ⇄ respondent via ntfy.sh) ---------- */
+/* ---------- remote control (moderator ⇄ respondent) ----------
+   Связь идёт сразу через два бесплатных публичных MQTT-брокера (HiveMQ и EMQX) по WebSocket.
+   У них нет дневного лимита сообщений, как был у ntfy.sh. Каждое сообщение уходит в оба брокера,
+   получатель отбрасывает дубли. Команды модератора повторяются, пока телефон не ответит «получил». */
 var RC_APPLY=false;
 const RC_CID=Math.random().toString(36).slice(2,10);
-const RC_HOST='https://ntfy.sh/';
 let RC_ROOM=RC_P.get('room');
 function rcNewRoom(){let s='';const a='abcdefghijkmnpqrstuvwxyz23456789';for(let i=0;i<12;i++)s+=a[Math.floor(Math.random()*a.length)];return 'vit-'+s}
-/* ntfy.sh ограничивает число сообщений с одного интернета (ответ 429). Поэтому шлём редко,
-   а команды модератора повторяем, пока не дойдут, и честно показываем, если не дошли. */
-function rcSend(m){if(!RC_ROOM)return Promise.resolve(false);m.f=RC_CID;m.r=RC_ROLE;
-  return fetch(RC_HOST+RC_ROOM,{method:'POST',body:JSON.stringify(m),keepalive:true}).then(r=>r.ok,()=>false)}
-let RC_PEND=0;
-function rcCmdSt(){const e=$('#rcCmdSt');if(!e)return;if(RC_PEND>0){e.hidden=false;e.textContent='Команда не дошла (сервис связи перегружен) — повторяю…'}else e.hidden=true}
-function rcCmd(m){if(RC_ROLE!=='mod'||RC_APPLY)return;setTimeout(()=>mod.classList.add('on'),30);
-  m.id2=Math.random().toString(36).slice(2,9);let n=0,fail=false;
-  const tryIt=()=>rcSend(m).then(ok=>{
-    if(ok){if(fail){RC_PEND--;rcCmdSt();toast('Команда дошла')}return}
-    if(!fail){fail=true;RC_PEND++;rcCmdSt()}
-    if(++n<12)setTimeout(tryIt,Math.min(2000*n,10000));else{RC_PEND--;rcCmdSt();toast('Команда не дошла. Нажмите кнопку ещё раз или смените сеть')}});
-  tryIt()}
-/* Устойчивое подключение: телефон блокируется / браузер сворачивается (например, при переходе в Zoom) —
-   соединение рвётся. При возврате подключаемся заново и догоняем пропущенные команды. */
-let RC_ES=null, RC_LAST='', RC_SEEN=new Set(), RC_OPEN=false, RC_H={};
-function rcOpen(since){
-  if(!RC_ROOM||!RC_H.msg)return;
-  if(RC_ES)RC_ES.close();
-  const es=new EventSource(RC_HOST+RC_ROOM+'/sse'+(since?'?since='+encodeURIComponent(since):'')); RC_ES=es;
-  es.onopen=()=>{if(RC_ES!==es)return;RC_OPEN=true;RC_H.state(true)};
-  es.onerror=()=>{if(RC_ES!==es)return;RC_OPEN=false;RC_H.state(false);if(es.readyState===2)setTimeout(()=>{if(RC_ES===es)rcOpen(RC_LAST)},2000)};
-  es.onmessage=e=>{if(RC_ES!==es)return;try{const d=JSON.parse(e.data);if(d.event!=='message'||RC_SEEN.has(d.id))return;RC_SEEN.add(d.id);RC_LAST=d.id;const m=JSON.parse(d.message);if(m.f===RC_CID)return;RC_H.msg(m,(d.time||0)*1000||Date.now())}catch(_){}}
+const RC_BROKERS=['wss://broker.hivemq.com:8884/mqtt','wss://broker.emqx.io:8084/mqtt'];
+const RC_TE=new TextEncoder(), RC_TD=new TextDecoder();
+let RC_H={}, RC_SEEN=new Set(), RC_CONNS=[], RC_OPEN=false;
+function mqStr(s){const b=RC_TE.encode(s);return [b.length>>8,b.length&255,...b]}
+function mqPkt(h,body){const len=[];let n=body.length;do{let d=n%128;n=Math.floor(n/128);if(n>0)d|=128;len.push(d)}while(n>0);const out=new Uint8Array(1+len.length+body.length);out[0]=h;out.set(len,1);out.set(body,1+len.length);return out}
+function rcTopic(){return 'vkusno-i-tochka/'+RC_ROOM}
+function rcState(){const ok=RC_CONNS.some(c=>c.ok);if(ok!==RC_OPEN){RC_OPEN=ok;if(RC_H.state)RC_H.state(ok)}}
+function rcRecv(txt){try{const m=JSON.parse(txt);if(!m||m.f===RC_CID)return;if(m.u){if(RC_SEEN.has(m.u))return;RC_SEEN.add(m.u)}if(RC_H.msg)RC_H.msg(m,Date.now())}catch(_){}}
+function rcBroker(url){
+  const c={ok:false,ws:null,dead:false,rt:null,pt:null};
+  c.open=()=>{
+    if(c.dead)return;clearTimeout(c.rt);clearInterval(c.pt);
+    if(c.ws){const o=c.ws;c.ws=null;try{o.close()}catch(_){}}
+    c.ok=false;rcState();
+    let ws;try{ws=new WebSocket(url,'mqtt')}catch(_){c.rt=setTimeout(c.open,3000);return}
+    c.ws=ws;ws.binaryType='arraybuffer';let buf=new Uint8Array(0);
+    const kill=setTimeout(()=>{if(c.ws===ws&&!c.ok)c.open()},10000);
+    ws.onopen=()=>{ws.send(mqPkt(0x10,[...mqStr('MQTT'),4,2,0,30,...mqStr('vit'+RC_CID+Math.random().toString(36).slice(2,6))]))};
+    ws.onmessage=e=>{
+      if(c.ws!==ws)return;
+      const nb=new Uint8Array(e.data),t=new Uint8Array(buf.length+nb.length);t.set(buf);t.set(nb,buf.length);buf=t;
+      while(buf.length>=2){
+        let mul=1,len=0,i=1,d;
+        do{if(i>=buf.length)return;d=buf[i++];len+=(d&127)*mul;mul*=128}while(d&128);
+        if(buf.length<i+len)return;
+        const h=buf[0],body=buf.slice(i,i+len);buf=buf.slice(i+len);
+        const type=h>>4;
+        if(type===2){if(body[1]===0)ws.send(mqPkt(0x82,[0,1,...mqStr(rcTopic()),0]));else c.rt=setTimeout(c.open,5000)}
+        else if(type===9){clearTimeout(kill);c.ok=true;rcState();c.pt=setInterval(()=>{try{ws.send(new Uint8Array([0xC0,0]))}catch(_){}},20000)}
+        else if(type===3){const tl=(body[0]<<8)|body[1];let p=2+tl;if((h>>1)&3)p+=2;rcRecv(RC_TD.decode(body.slice(p)))}
+      }
+    };
+    ws.onclose=()=>{if(c.ws!==ws)return;clearTimeout(kill);clearInterval(c.pt);c.ws=null;c.ok=false;rcState();c.rt=setTimeout(c.open,2000)};
+    ws.onerror=()=>{};
+  };
+  c.pub=s=>{if(!c.ok||!c.ws||c.ws.readyState!==1)return false;try{c.ws.send(mqPkt(0x30,[...mqStr(rcTopic()),...RC_TE.encode(s)]));return true}catch(_){return false}};
+  c.stop=()=>{c.dead=true;clearTimeout(c.rt);clearInterval(c.pt);if(c.ws){const o=c.ws;c.ws=null;try{o.close()}catch(_){}}c.ok=false};
+  c.alive=()=>!!c.ws&&c.ws.readyState<=1;
+  return c;
 }
-function rcConnect(onMsg,onState,since){RC_H={msg:onMsg,state:onState};RC_SEEN=new Set();RC_LAST='';RC_OPEN=false;rcOpen(since)}
-function rcWake(){if(!RC_H.msg)return;if(!RC_ES||RC_ES.readyState!==1)rcOpen(RC_LAST);else if(RC_H.wake)RC_H.wake()}
+function rcSend(m){if(!RC_ROOM)return Promise.resolve(false);m.f=RC_CID;m.r=RC_ROLE;m.u=Math.random().toString(36).slice(2,11);
+  const s=JSON.stringify(m);let ok=false;RC_CONNS.forEach(c=>{if(c.pub(s))ok=true});return Promise.resolve(ok)}
+function rcConnect(onMsg,onState){RC_H={msg:onMsg,state:onState};RC_SEEN=new Set();RC_CONNS.forEach(c=>c.stop());RC_OPEN=false;
+  RC_CONNS=RC_BROKERS.map(rcBroker);RC_CONNS.forEach(c=>c.open())}
+function rcWake(){if(!RC_H.msg)return;RC_CONNS.forEach(c=>{if(!c.alive())c.open()});if(RC_H.wake)RC_H.wake()}
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)rcWake()});
 addEventListener('pageshow',rcWake);addEventListener('focus',rcWake);addEventListener('online',rcWake);
-setInterval(()=>{if(RC_ES&&RC_ES.readyState===2)rcOpen(RC_LAST)},5000);
+/* команды модератора: повторяем каждые 3 с, пока телефон не ответит «получил» (до 15 минут) */
+const RC_PEND=new Map();
+function rcCmdSt(){const e=$('#rcCmdSt');if(!e)return;const late=[...RC_PEND.values()].some(p=>Date.now()-p.t0>5000);
+  if(late){e.hidden=false;e.textContent=RC_OPEN?'Команда ещё не дошла до телефона респондента — повторяю. Проверьте, что у него открыта вкладка с прототипом':'Нет связи с сервером — переподключаюсь, команда уйдёт сама'}else e.hidden=true}
+function rcCmd(m){if(RC_ROLE!=='mod'||RC_APPLY)return;setTimeout(()=>mod.classList.add('on'),30);
+  const key=m.c==='set'?'set:'+m.id:(m.c==='nt'?'nt':'nav');
+  RC_PEND.forEach((p,id)=>{if(p.key===key){clearInterval(p.iv);RC_PEND.delete(id)}});
+  m.id2=Math.random().toString(36).slice(2,9);
+  const p={key,t0:Date.now(),warned:false};
+  const tryIt=()=>{if(Date.now()-p.t0>15*60000){clearInterval(p.iv);RC_PEND.delete(m.id2);rcCmdSt();toast('Команда не дошла. Нажмите кнопку ещё раз');return}
+    rcSend(Object.assign({},m));if(Date.now()-p.t0>5000)p.warned=true;rcCmdSt()};
+  p.iv=setInterval(tryIt,3000);RC_PEND.set(m.id2,p);tryIt()}
+function rcAck(id){const p=RC_PEND.get(id);if(!p)return;clearInterval(p.iv);RC_PEND.delete(id);if(p.warned)toast('Команда дошла');rcCmdSt()}
 function rcApply(m){
   RC_APPLY=true;
   try{
@@ -1896,7 +1929,7 @@ if(RC_ROLE==='resp'){
   rcConnect((m,t)=>{
       if(m.c==='ping'){beat('hb');return}
       // команды модератора; пропущенные за время обрыва применяем, но не старше 15 минут
-      if(m.id2){if(done.has(m.id2))return;done.add(m.id2)}
+      if(m.id2){if(m.r==='mod')rcSend({c:'ack',a:m.id2});if(done.has(m.id2))return;done.add(m.id2)}
       if(['task','st','nt','set'].includes(m.c)&&m.r!=='resp'&&Date.now()-t<15*60000) rcApply(m);
     },
     ok=>{ if(ok) beat('hi') });
@@ -1904,9 +1937,9 @@ if(RC_ROLE==='resp'){
   // журнал копим и шлём пачкой раз в 15 с; «я на связи» — раз в 40 с, если журнала не было
   let lastLog=0;
   setInterval(()=>{
-    if(RC_Q.length&&Date.now()-lastLog>=15000){const lines=RC_Q.splice(0,RC_Q.length);lastLog=last=Date.now();
+    if(RC_Q.length&&Date.now()-lastLog>=3000){const lines=RC_Q.splice(0,RC_Q.length);lastLog=last=Date.now();
       rcSend({c:'log',lines,scr:scrName()}).then(ok=>{if(!ok)RC_Q.unshift(...lines)})}
-    else if(Date.now()-last>40000) beat('hb');
+    else if(Date.now()-last>20000) beat('hb');
   },3000);
 }
 if(RC_ROLE==='mod'){
@@ -1923,7 +1956,7 @@ if(RC_ROLE==='mod'){
   let lastPing=0;RC_H.wake=()=>{if(Date.now()-lastPing>30000){lastPing=Date.now();rcSend({c:'ping'})}};
   let seen=0, scr='';
   const onMsg=(m,t)=>{
-    if(!['hi','hb','log'].includes(m.c)||m.r==='mod')return;
+    if(m.c==='ack'){rcAck(m.a);return}if(!['hi','hb','log'].includes(m.c)||m.r==='mod')return;
     const wasOn=seen&&t-seen<90000;
     seen=Math.max(seen,t); if(m.scr) scr=m.scr;
     if(m.c==='hi'&&!wasOn){S.log.push('—— респондент на связи ——')}
