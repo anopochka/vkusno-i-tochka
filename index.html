@@ -898,6 +898,7 @@ body.mob .sheet{padding-bottom:calc(20px + env(safe-area-inset-bottom,0px))}
     <div class="cap">Удалённое управление</div>
     <div class="rcline"><i id="rcDot"></i><span id="rcSt">Подключаюсь…</span></div>
     <div class="rcline"><i id="rcDot2"></i><span id="rcResp">Респондент ещё не открыл ссылку</span></div>
+    <div id="rcCmdSt" hidden style="color:#c0392b;font-size:12px;margin-top:6px"></div>
     <div style="color:var(--grey);font-size:12px;margin:10px 0 6px">Ссылка для респондента</div>
     <input id="rcLink" class="rcin" readonly>
     <div class="mrow"><button id="rcCopy">Скопировать ссылку</button><button id="rcNew">Новый респондент</button></div>
@@ -1846,8 +1847,19 @@ const RC_CID=Math.random().toString(36).slice(2,10);
 const RC_HOST='https://ntfy.sh/';
 let RC_ROOM=RC_P.get('room');
 function rcNewRoom(){let s='';const a='abcdefghijkmnpqrstuvwxyz23456789';for(let i=0;i<12;i++)s+=a[Math.floor(Math.random()*a.length)];return 'vit-'+s}
-function rcSend(m){if(!RC_ROOM)return;m.f=RC_CID;m.r=RC_ROLE;fetch(RC_HOST+RC_ROOM,{method:'POST',body:JSON.stringify(m),keepalive:true}).catch(()=>{})}
-function rcCmd(m){if(RC_ROLE!=='mod'||RC_APPLY)return;rcSend(m);setTimeout(()=>mod.classList.add('on'),30)}
+/* ntfy.sh ограничивает число сообщений с одного интернета (ответ 429). Поэтому шлём редко,
+   а команды модератора повторяем, пока не дойдут, и честно показываем, если не дошли. */
+function rcSend(m){if(!RC_ROOM)return Promise.resolve(false);m.f=RC_CID;m.r=RC_ROLE;
+  return fetch(RC_HOST+RC_ROOM,{method:'POST',body:JSON.stringify(m),keepalive:true}).then(r=>r.ok,()=>false)}
+let RC_PEND=0;
+function rcCmdSt(){const e=$('#rcCmdSt');if(!e)return;if(RC_PEND>0){e.hidden=false;e.textContent='Команда не дошла (сервис связи перегружен) — повторяю…'}else e.hidden=true}
+function rcCmd(m){if(RC_ROLE!=='mod'||RC_APPLY)return;setTimeout(()=>mod.classList.add('on'),30);
+  m.id2=Math.random().toString(36).slice(2,9);let n=0,fail=false;
+  const tryIt=()=>rcSend(m).then(ok=>{
+    if(ok){if(fail){RC_PEND--;rcCmdSt();toast('Команда дошла')}return}
+    if(!fail){fail=true;RC_PEND++;rcCmdSt()}
+    if(++n<12)setTimeout(tryIt,Math.min(2000*n,10000));else{RC_PEND--;rcCmdSt();toast('Команда не дошла. Нажмите кнопку ещё раз или смените сеть')}});
+  tryIt()}
 /* Устойчивое подключение: телефон блокируется / браузер сворачивается (например, при переходе в Zoom) —
    соединение рвётся. При возврате подключаемся заново и догоняем пропущенные команды. */
 let RC_ES=null, RC_LAST='', RC_SEEN=new Set(), RC_OPEN=false, RC_H={};
@@ -1879,18 +1891,23 @@ if(RC_ROLE==='resp'){
   const scrName=()=>{let s=NAMES[S.stack[S.stack.length-1]]||'';const o=S.order;
     if(o){if(o.state==='ready')s+=' · заберите до '+hm(o.readyAt+15*MIN);else if(o.state==='expired')s+=' · время вышло';else if(o.state==='delayA'&&o.newReadyAt)s+=' · задержка, готов ≈'+hm(o.newReadyAt);else if(['accepted','cooking'].includes(o.state))s+=' · готов ≈'+hm(o.readyAt)}
     return s};
-  const beat=c=>{rcSend({c,scr:scrName()});last=Date.now()};
+  const beat=c=>{last=Date.now();rcSend({c,scr:scrName()})};
+  const done=new Set();
   rcConnect((m,t)=>{
       if(m.c==='ping'){beat('hb');return}
       // команды модератора; пропущенные за время обрыва применяем, но не старше 15 минут
+      if(m.id2){if(done.has(m.id2))return;done.add(m.id2)}
       if(['task','st','nt','set'].includes(m.c)&&m.r!=='resp'&&Date.now()-t<15*60000) rcApply(m);
     },
     ok=>{ if(ok) beat('hi') });
-  RC_H.wake=()=>beat('hb');
+  RC_H.wake=()=>{if(Date.now()-last>10000)beat('hb')};
+  // журнал копим и шлём пачкой раз в 15 с; «я на связи» — раз в 40 с, если журнала не было
+  let lastLog=0;
   setInterval(()=>{
-    if(RC_Q.length){const lines=RC_Q.splice(0,RC_Q.length);rcSend({c:'log',lines,scr:scrName()});last=Date.now()}
-    else if(Date.now()-last>15000) beat('hb');
-  },4000);
+    if(RC_Q.length&&Date.now()-lastLog>=15000){const lines=RC_Q.splice(0,RC_Q.length);lastLog=last=Date.now();
+      rcSend({c:'log',lines,scr:scrName()}).then(ok=>{if(!ok)RC_Q.unshift(...lines)})}
+    else if(Date.now()-last>40000) beat('hb');
+  },3000);
 }
 if(RC_ROLE==='mod'){
   if(!RC_ROOM){try{RC_ROOM=localStorage.getItem('rcRoom')}catch(_){}}
@@ -1903,11 +1920,11 @@ if(RC_ROLE==='mod'){
     // since=30m — после перезагрузки страницы модератора журнал и статус респондента восстанавливаются
     rcConnect(onMsg,ok=>{$('#rcSt').textContent=ok?'Связь есть':'Нет связи — переподключаюсь…';$('#rcDot').className=ok?'ok':'bad';if(ok)rcSend({c:'ping'})},'30m');
   };
-  RC_H.wake=()=>rcSend({c:'ping'});
+  let lastPing=0;RC_H.wake=()=>{if(Date.now()-lastPing>30000){lastPing=Date.now();rcSend({c:'ping'})}};
   let seen=0, scr='';
   const onMsg=(m,t)=>{
     if(!['hi','hb','log'].includes(m.c)||m.r==='mod')return;
-    const wasOn=seen&&t-seen<45000;
+    const wasOn=seen&&t-seen<90000;
     seen=Math.max(seen,t); if(m.scr) scr=m.scr;
     if(m.c==='hi'&&!wasOn){S.log.push('—— респондент на связи ——')}
     if(m.c==='log'&&m.lines){S.log.push(...m.lines)}
@@ -1915,7 +1932,7 @@ if(RC_ROLE==='mod'){
     paintResp();
   };
   const ago=s=>s<60?s+' с':Math.round(s/60)+' мин';
-  const paintResp=()=>{if(!seen)return;const s=Math.max(0,Math.round((Date.now()-seen)/1000));const on=s<45;
+  const paintResp=()=>{if(!seen)return;const s=Math.max(0,Math.round((Date.now()-seen)/1000));const on=s<90;
     $('#rcDot2').className=on?'ok':'bad';
     $('#rcResp').textContent=on?`Респондент на связи${scr?' · экран: '+scr:''}`:`Респондент не на связи уже ${ago(s)}${scr?' · был на экране: '+scr:''}. Попросите его вернуться во вкладку с прототипом — подключение восстановится само, команды дойдут`};
   setInterval(paintResp,3000);
